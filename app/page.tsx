@@ -23,7 +23,7 @@ const Home = () => {
   const [hoveredWork, setHoveredWork] = useState<number | null>(null);
   const [isTextHover, setIsTextHover] = useState(false);
   const [cursorColor, setCursorColor] = useState<string>("#ffffff");
-  const [cursorSize, setCursorSize] = useState<number>(82);
+  const [cursorSize, setCursorSize] = useState<number>(42);
   const [blobScaleX, setBlobScaleX] = useState<number>(1);
   const [blobScaleY, setBlobScaleY] = useState<number>(1);
   const [isPlayerOpen, setIsPlayerOpen] = useState(false);
@@ -33,6 +33,11 @@ const Home = () => {
   const videoRefs = useRef<{ [key: number]: HTMLVideoElement | null }>({});
   const workScrollRef = useRef<HTMLDivElement | null>(null);
   const itemRefs = useRef<{ [key: number]: HTMLDivElement | null }>({});
+  const [hoveredService, setHoveredService] = useState<number | null>(null);
+  const [playingServiceId, setPlayingServiceId] = useState<number | null>(null);
+  const servicesVideoRefs = useRef<{ [key: number]: HTMLVideoElement | null }>(
+    {}
+  );
 
   const rawX = useMotionValue(0);
   const rawY = useMotionValue(0);
@@ -85,7 +90,7 @@ const Home = () => {
           setBlobScaleY(Math.max(0.85, 1 - ax * 0.25));
         } else {
           setCursorColor("#ffffff");
-          setCursorSize(82);
+          setCursorSize(42);
           setIsTextHover(false);
           setBlobScaleX(1);
           setBlobScaleY(1);
@@ -128,15 +133,35 @@ const Home = () => {
       title: "Motion Design",
       category: "Animation",
       image:
-        "https://images.unsplash.com/photo-1551269901-5c5e14c25df7?w=800&h=600&fit=crop",
+        "https://ik.imagekit.io/gx2xyzf36/lemonade.mp4?updatedAt=1767362071398",
     },
   ];
 
   const services = [
-    { title: "Commercials", desc: "Powerful storytelling that drives results" },
-    { title: "Branded Content", desc: "Authentic narratives for your brand" },
-    { title: "Animation", desc: "Dynamic motion and visual effects" },
-    { title: "Documentaries", desc: "Real stories that inspire change" },
+    {
+      title: "Commercials",
+      video:
+        "https://ik.imagekit.io/gx2xyzf36/AQNW_BxPs9MswAIz_SJ13h40hybHYhmFoiXESrVDeYvfxQZ-ZXZtUfP0aiYEmzkcuqO8kRzfRU32yTNflSGi1rN_HLLVHNYS0lgYo_E.mp4?updatedAt=1767362097626",
+      desc: "Powerful storytelling that drives results",
+    },
+    {
+      title: "Branded Content",
+      video:
+        "https://ik.imagekit.io/gx2xyzf36/AQNW_BxPs9MswAIz_SJ13h40hybHYhmFoiXESrVDeYvfxQZ-ZXZtUfP0aiYEmzkcuqO8kRzfRU32yTNflSGi1rN_HLLVHNYS0lgYo_E.mp4?updatedAt=1767362097626",
+      desc: "Authentic narratives for your brand",
+    },
+    {
+      title: "Animation",
+      video:
+        "https://ik.imagekit.io/gx2xyzf36/AQNW_BxPs9MswAIz_SJ13h40hybHYhmFoiXESrVDeYvfxQZ-ZXZtUfP0aiYEmzkcuqO8kRzfRU32yTNflSGi1rN_HLLVHNYS0lgYo_E.mp4?updatedAt=1767362097626",
+      desc: "Dynamic motion and visual effects",
+    },
+    {
+      title: "Documentaries",
+      video:
+        "https://ik.imagekit.io/gx2xyzf36/AQNW_BxPs9MswAIz_SJ13h40hybHYhmFoiXESrVDeYvfxQZ-ZXZtUfP0aiYEmzkcuqO8kRzfRU32yTNflSGi1rN_HLLVHNYS0lgYo_E.mp4?updatedAt=1767362097626",
+      desc: "Real stories that inspire change",
+    },
   ];
 
   const blogPosts = [
@@ -356,7 +381,7 @@ const Home = () => {
                 transition={{ duration: 1, ease: "easeOut" }}
                 className=" lg:text-7xl text-5xl font-bold leading-tight mb-2 pt-24 w-full"
               >
-                THE VOID.
+                THE VOID
               </motion.h1>
               <motion.h1
                 initial={{ opacity: 0, y: 20 }}
@@ -364,10 +389,21 @@ const Home = () => {
                 transition={{ duration: 1, ease: "easeOut" }}
                 className=" lg:text-3xl text-2xl font-medium leading-tight  w-full"
               >
-                <Typewriter text="An agency for all things " duration={2} />
-                <span className="text-[#ff9500]">
+                <motion.span
+                  initial={{ opacity: 0, y: 8 }}
+                  animate={{ opacity: 1, y: 0 }}
+                  transition={{ duration: 0.6, ease: "easeOut" }}
+                >
+                  <Typewriter text="An agency for all things " duration={2} />
+                </motion.span>
+                <motion.span
+                  initial={{ opacity: 0, y: 8 }}
+                  animate={{ opacity: 1, y: 0 }}
+                  transition={{ duration: 0.6, ease: "easeOut", delay: 2 }}
+                  className="text-[#ff9500]"
+                >
                   <Typewriter text="video" duration={1} startDelay={2} />
-                </span>
+                </motion.span>
               </motion.h1>
             </div>
             <motion.div
@@ -403,15 +439,15 @@ const Home = () => {
         <div className="max-w-7xl mx-auto">
           <div className="flex items-center justify-between mb-12">
             <div className="relative inline-block">
-              <motion.h2
+              <motion.div
                 initial={{ opacity: 0, y: 20 }}
                 whileInView={{ opacity: 1, y: 0 }}
                 viewport={{ once: false }}
                 transition={{ duration: 1, ease: "easeOut" }}
-                className="text-4xl md:text-5xl font-bold"
+                className=" text-gray-400 text-lg tracking-widest"
               >
-                Featured Work
-              </motion.h2>
+                FEATURED WORK
+              </motion.div>
               <motion.div
                 className="absolute bottom-[-8px] left-0 h-[2px] bg-[#ff9500]"
                 initial={{ width: "50%" }}
@@ -431,7 +467,7 @@ const Home = () => {
             whileInView={{ opacity: 1, y: 0 }}
             viewport={{ once: true }}
             transition={{ duration: 1, delay: 0.2, ease: "easeOut" }}
-            className="flex gap-2 overflow-x-scroll [&::-webkit-scrollbar]:hidden [-ms-overflow-style:none] [scrollbar-width:none]"
+            className="flex gap-2 overflow-x-scroll [&::-webkit-scrollbar]:hidden [-ms-overflow-style:none] [scrollbar-width:none] snap-x snap-mandatory scroll-smooth"
             ref={workScrollRef}
           >
             {workItems.map((item) => {
@@ -488,7 +524,7 @@ const Home = () => {
               return (
                 <div
                   key={item.id}
-                  className="relative group"
+                  className="relative group snap-start snap-always flex-shrink-0"
                   onMouseEnter={() => setHoveredWork(item.id)}
                   onMouseLeave={() => setHoveredWork(null)}
                   onClick={handleVideoClick}
@@ -572,17 +608,31 @@ const Home = () => {
       </section>
 
       {/* Services Section */}
-      <section id="services" className="py-20 px-6 bg-zinc-950">
-        <div className="max-w-7xl mx-auto">
-          <motion.div
-            initial={{ opacity: 0, y: 20 }}
-            whileInView={{ opacity: 1, y: 0 }}
-            viewport={{ once: false }}
-            transition={{ duration: 1, ease: "easeOut" }}
-            className="mb-8 text-gray-400 text-sm tracking-widest"
-          >
-            OUR PROCESS
-          </motion.div>
+      <section id="services" className="py-20 px-6 bg-zinc-950 ">
+        <div className="max-w-7xl mx-auto ">
+          <div className="relative inline-block mb-8">
+            <motion.div
+              initial={{ opacity: 0, y: 20 }}
+              whileInView={{ opacity: 1, y: 0 }}
+              viewport={{ once: false }}
+              transition={{ duration: 1, ease: "easeOut" }}
+              className=" text-gray-400 text-lg tracking-widest"
+            >
+              OUR PROCESS
+            </motion.div>
+            <motion.div
+              className="absolute bottom-[-8px] left-0 h-[2px] bg-[#ff9500]"
+              initial={{ width: "50%" }}
+              animate={{ width: "100%" }}
+              transition={{
+                duration: 7,
+                repeat: Infinity,
+                ease: "linear",
+              }}
+              style={{ originX: 0 }}
+            />
+          </div>
+
           <motion.h2
             initial={{ opacity: 0, y: 20 }}
             whileInView={{ opacity: 1, y: 0 }}
@@ -594,7 +644,6 @@ const Home = () => {
             <br />
             should be <span className="text-[#ff9500]"> easy </span>
           </motion.h2>
-
           <motion.p
             initial={{ opacity: 0, y: 20 }}
             whileInView={{ opacity: 1, y: 0 }}
@@ -606,30 +655,73 @@ const Home = () => {
             positively impacts your business. From commercials to animation,
             documentaries to branded content, we&#39;ve got you covered.
           </motion.p>
-
-          <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6">
-            {services.map((service, idx) => (
-              <motion.div
-                key={idx}
-                initial={{ opacity: 0, y: 20 }}
-                whileInView={{ opacity: 1, y: 0 }}
-                viewport={{ once: false }}
-                transition={{
-                  duration: 1,
-                  delay: 0.2 + idx * 0.1,
-                  ease: "easeOut",
-                }}
-                className="group border border-gray-800 rounded-lg p-8 hover:bg-zinc-900 transition-all cursor-pointer hover:border-gray-600"
-              >
-                <h3 className="text-2xl font-bold mb-3 group-hover:text-gray-300 transition-colors">
-                  {service.title}
-                </h3>
-                <p className="text-gray-400">{service.desc}</p>
-                <div className="mt-6 opacity-0 group-hover:opacity-100 transition-opacity">
-                  <ChevronRight className="text-white" />
+          <div className="relative inline-block mb-8 md:mt-24 ">
+            <motion.div
+              initial={{ opacity: 0, y: 20 }}
+              whileInView={{ opacity: 1, y: 0 }}
+              viewport={{ once: false }}
+              transition={{ duration: 1, ease: "easeOut" }}
+              className=" text-gray-400 text-lg tracking-widest "
+            >
+              WHAT WE DO ?
+            </motion.div>
+            <motion.div
+              className="absolute bottom-[-8px] left-0 h-[2px] bg-[#ff9500]"
+              initial={{ width: "50%" }}
+              animate={{ width: "100%" }}
+              transition={{
+                duration: 7,
+                repeat: Infinity,
+                ease: "linear",
+              }}
+              style={{ originX: 0 }}
+            />
+          </div>
+          <div className="flex gap-[2px] overflow-x-scroll scroll-smooth [&::-webkit-scrollbar]:hidden [-ms-overflow-style:none] [scrollbar-width:none]">
+            {services.map((service, idx) => {
+              const isPlaying = playingServiceId === idx;
+              const handleEnter = () => {
+                setHoveredService(idx);
+                const current = servicesVideoRefs.current[idx];
+                if (!current) return;
+                Object.values(servicesVideoRefs.current).forEach((v) => {
+                  if (v && v !== current) v.pause();
+                });
+                current.muted = true;
+                current.play();
+                setPlayingServiceId(idx);
+              };
+              const handleLeave = () => {
+                setHoveredService(null);
+                const current = servicesVideoRefs.current[idx];
+                if (current) current.pause();
+                setPlayingServiceId(null);
+              };
+              return (
+                <div
+                  key={idx}
+                  onMouseEnter={handleEnter}
+                  onMouseLeave={handleLeave}
+                  className="relative group w-[80vw] md:w-[300px] h-[90vh] overflow-hidden flex-shrink-0"
+                >
+                  <video
+                    ref={(el) => {
+                      servicesVideoRefs.current[idx] = el;
+                    }}
+                    playsInline
+                    muted
+                    className="relative z-0 w-full h-full object-cover"
+                  >
+                    <source src={service.video} type="video/mp4" />
+                  </video>
+                  <div className="absolute inset-0 z-10 bg-black/60 transition-opacity duration-300 flex items-center justify-center">
+                    <h3 className=" font-medium text-gray-300 group-hover:text-white transform transition-transform duration-300 ease-in-out group-hover:scale-105">
+                      {service.title}
+                    </h3>
+                  </div>
                 </div>
-              </motion.div>
-            ))}
+              );
+            })}
           </div>
         </div>
       </section>
@@ -670,15 +762,6 @@ const Home = () => {
             you&#39;re ready to cut footage, we&#39;ll take you from sticky note
             to final.mp4.
           </motion.p>
-          <motion.button
-            initial={{ opacity: 0, y: 20 }}
-            whileInView={{ opacity: 1, y: 0 }}
-            viewport={{ once: false }}
-            transition={{ duration: 1, delay: 0.6, ease: "easeOut" }}
-            className="border border-white px-8 py-4 rounded-full hover:bg-white hover:text-black transition-all"
-          >
-            Learn More About Us
-          </motion.button>
         </div>
       </section>
 
@@ -686,21 +769,28 @@ const Home = () => {
       <section id="blog" className="py-20 px-6 bg-zinc-950">
         <div className="max-w-7xl mx-auto">
           <div className="flex items-center justify-between mb-12">
-            <motion.h2
-              initial={{ opacity: 0, y: 20 }}
-              whileInView={{ opacity: 1, y: 0 }}
-              viewport={{ once: false }}
-              transition={{ duration: 1, ease: "easeOut" }}
-              className="text-4xl md:text-5xl font-bold"
-            >
-              Featured Posts
-            </motion.h2>
-            <a
-              href="#"
-              className="text-gray-400 hover:text-white flex items-center gap-2 transition-colors"
-            >
-              View blog <ChevronRight size={20} />
-            </a>
+            <div className="relative inline-block ">
+              <motion.div
+                initial={{ opacity: 0, y: 20 }}
+                whileInView={{ opacity: 1, y: 0 }}
+                viewport={{ once: false }}
+                transition={{ duration: 1, ease: "easeOut" }}
+                className=" text-gray-400 text-lg tracking-widest "
+              >
+                ARTICLES
+              </motion.div>
+              <motion.div
+                className="absolute bottom-[-8px] left-0 h-[2px] bg-[#ff9500]"
+                initial={{ width: "50%" }}
+                animate={{ width: "100%" }}
+                transition={{
+                  duration: 7,
+                  repeat: Infinity,
+                  ease: "linear",
+                }}
+                style={{ originX: 0 }}
+              />
+            </div>
           </div>
 
           <div className="grid grid-cols-1 md:grid-cols-3 gap-8">
@@ -777,7 +867,9 @@ const Home = () => {
         <div className="max-w-7xl mx-auto">
           <div className="grid grid-cols-1 md:grid-cols-4 gap-8 mb-8">
             <div>
-              <div className="text-2xl font-bold mb-4">THE VOID</div>
+              <div className="text-2xl text-[#303EF7] font-bold mb-4">
+                THE VOID
+              </div>
               <p className="text-gray-400">
                 Creating visual stories that matter.
               </p>
