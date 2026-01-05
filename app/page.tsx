@@ -428,7 +428,7 @@ const Home = () => {
                   {true ? (
                     <>
                       <video
-                        ref={(el) => (videoRefs.current[item.id] = el)}
+                        ref={(el) => {(videoRefs.current[item.id]  = el)}}
                         className={`min-w-[100vw] h-[500px] object-cover cursor-pointer bg-black transition-all duration-700 ease-[cubic-bezier(0.25,0.8,0.25,1)] ${
                           isPlaying ? "md:min-w-[90vw]" : "md:min-w-[80vh]"
                         }`}
@@ -582,7 +582,7 @@ const Home = () => {
           >
             We hear you
             <br />
-            loud & clear
+       <span className="text-[#ff9500]">     loud & clear </span>
           </motion.h2>
           <motion.p
             initial={{ opacity: 0, y: 20 }}
