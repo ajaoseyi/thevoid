@@ -561,7 +561,7 @@ const Home = () => {
             href="mailto:hello@visionary.studio"
             className="text-2xl md:text-3xl text-gray-400 hover:text-white transition-colors inline-block mb-12"
           >
-            hello@visionary.studio
+            hello@thevoid.studio
           </a>
           <div className="flex flex-wrap justify-center gap-4">
             <button className="bg-white text-black px-8 py-4 rounded-full hover:bg-gray-200 transition-all">
@@ -579,7 +579,7 @@ const Home = () => {
         <div className="max-w-7xl mx-auto">
           <div className="grid grid-cols-1 md:grid-cols-4 gap-8 mb-8">
             <div>
-              <div className="text-2xl font-bold mb-4">VISIONARY</div>
+              <div className="text-2xl font-bold mb-4">THE VOID</div>
               <p className="text-gray-400">
                 Creating visual stories that matter.
               </p>
@@ -646,7 +646,7 @@ const Home = () => {
             </div>
           </div>
           <div className="pt-8 border-t border-gray-800 text-center text-gray-400">
-            <p>© 2026 Visionary Studio. All rights reserved.</p>
+            <p>© 2026 The Void Studio. All rights reserved.</p>
           </div>
         </div>
       </footer>
