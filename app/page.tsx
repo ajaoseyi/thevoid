@@ -209,7 +209,7 @@ const Home = () => {
         }`}
       >
         <div className="max-w-7xl mx-auto px-6 flex items-center justify-between">
-          <div className="text-5xl font-bold tracking-tight">THE VOID</div>
+          <div className="text-5xl font-bold tracking-tight">LOGO</div>
 
           <nav className="hidden md:flex items-center gap-8">
             <a href="#work" className="hover:text-gray-400 transition-colors">
@@ -279,8 +279,8 @@ const Home = () => {
       {/* Hero Section */}
       <section className=" pb-20 px-6">
         <div className="max-w-7xl mx-auto">
-          <div className="flex items-end h-fit">
-            <h1 className=" lg:text-7xl font-bold leading-tight mb-8 pt-24 w-full">
+          <div className="flex items-end h-fit pt-5">
+            <h1 className=" lg:text-7xl text-5xl font-bold leading-tight mb-8 pt-24 w-full">
               An agency for
               <br />
               all things <span className="text-[#ff9500]"> video </span>
@@ -397,6 +397,7 @@ const Home = () => {
                         ref={(el) => {
                           videoRefs.current[item.id] = el;
                         }}
+                        controls
                         className="min-w-[80vh] h-[500px] object-cover cursor-pointer bg-black"
                         playsInline
                         muted={isMuted}
