@@ -1,13 +1,26 @@
 "use client";
 import React, { useState, useEffect, useRef } from "react";
-import { Menu, X, Play, ArrowRight, ChevronRight, Volume2, VolumeX } from "lucide-react";
-import { motion } from "motion/react";
+import {
+  Menu,
+  X,
+  Play,
+  Pause,
+  ArrowRight,
+  ChevronRight,
+  Volume2,
+  VolumeX,
+} from "lucide-react";
+import {
+  motion,
+  useMotionValue,
+  useSpring,
+  AnimatePresence,
+} from "motion/react";
 import "../app/pages.css";
 const Home = () => {
   const [isMenuOpen, setIsMenuOpen] = useState(false);
   const [scrolled, setScrolled] = useState(false);
   const [hoveredWork, setHoveredWork] = useState<number | null>(null);
-  const [cursorPosition, setCursorPosition] = useState({ x: 0, y: 0 });
   const [isTextHover, setIsTextHover] = useState(false);
   const [cursorColor, setCursorColor] = useState<string>("#ffffff");
   const [cursorSize, setCursorSize] = useState<number>(82);
@@ -18,6 +31,17 @@ const Home = () => {
   const [playingVideoId, setPlayingVideoId] = useState<number | null>(null);
   const [videoMuted, setVideoMuted] = useState<{ [key: number]: boolean }>({});
   const videoRefs = useRef<{ [key: number]: HTMLVideoElement | null }>({});
+
+  const rawX = useMotionValue(0);
+  const rawY = useMotionValue(0);
+  const springX = useSpring(rawX, { stiffness: 600, damping: 40 });
+  const springY = useSpring(rawY, { stiffness: 600, damping: 40 });
+  const effectiveCursorSize = hoveredWork !== null ? 120 : cursorSize;
+  const effectiveCursorColor = hoveredWork !== null ? "#ff9500" : cursorColor;
+  const sizeRef = useRef(cursorSize);
+  useEffect(() => {
+    sizeRef.current = effectiveCursorSize;
+  }, [effectiveCursorSize]);
   useEffect(() => {
     const handleScroll = () => {
       setScrolled(window.scrollY > 50);
@@ -27,52 +51,53 @@ const Home = () => {
   }, []);
 
   useEffect(() => {
-    if (hoveredWork !== null) {
-      setCursorColor("#ff9500");
-      setCursorSize(120);
-    }
-  }, [hoveredWork]);
-  useEffect(() => {
+    let rafId = 0;
     const handleMouseMove = (e: MouseEvent) => {
-      setCursorPosition({ x: e.clientX, y: e.clientY });
-      const target = e.target as HTMLElement | null;
-      const textEl = target?.closest(
-        "p, h1, h2, h3, h4, h5, h6, a, span, li"
-      ) as HTMLElement | null;
-      if (textEl) {
-        const color = getComputedStyle(textEl).color;
-        const m = color.match(/rgba?\((\d+),\s*(\d+),\s*(\d+)/i);
-        if (m) {
-          const r = parseInt(m[1], 10);
-          const g = parseInt(m[2], 10);
-          const b = parseInt(m[3], 10);
-          const luminance = (0.2126 * r + 0.7152 * g + 0.0722 * b) / 255;
-          setCursorColor(luminance > 0.6 ? "#000000" : "#ffffff");
+      const run = () => {
+        springX.set(e.clientX - sizeRef.current / 2);
+        springY.set(e.clientY - sizeRef.current / 2);
+        const target = e.target as HTMLElement | null;
+        const textEl = target?.closest(
+          "p, h1, h2, h3, h4, h5, h6, a, span, li"
+        ) as HTMLElement | null;
+        if (textEl) {
+          const color = getComputedStyle(textEl).color;
+          const m = color.match(/rgba?\((\d+),\s*(\d+),\s*(\d+)/i);
+          if (m) {
+            const r = parseInt(m[1], 10);
+            const g = parseInt(m[2], 10);
+            const b = parseInt(m[3], 10);
+            const luminance = (0.2126 * r + 0.7152 * g + 0.0722 * b) / 255;
+            setCursorColor(luminance > 0.6 ? "#000000" : "#ffffff");
+          } else {
+            setCursorColor("#ffffff");
+          }
+          setCursorSize(120);
+          setIsTextHover(true);
+          const rect = textEl.getBoundingClientRect();
+          const nx =
+            Math.min(Math.max((e.clientX - rect.left) / rect.width, 0), 1) -
+            0.5;
+          const ax = Math.abs(nx);
+          setBlobScaleX(1 + ax * 0.35);
+          setBlobScaleY(Math.max(0.85, 1 - ax * 0.25));
         } else {
           setCursorColor("#ffffff");
+          setCursorSize(82);
+          setIsTextHover(false);
+          setBlobScaleX(1);
+          setBlobScaleY(1);
         }
-        setCursorSize(120);
-        setIsTextHover(true);
-        const rect = textEl.getBoundingClientRect();
-        const nx =
-          Math.min(Math.max((e.clientX - rect.left) / rect.width, 0), 1) - 0.5;
-        const ny =
-          Math.min(Math.max((e.clientY - rect.top) / rect.height, 0), 1) - 0.5;
-        const ax = Math.abs(nx);
-        const ay = Math.abs(ny);
-        setBlobScaleX(1 + ax * 0.35);
-        setBlobScaleY(Math.max(0.85, 1 - ax * 0.25));
-      } else {
-        setCursorColor("#ffffff");
-        setCursorSize(82);
-        setIsTextHover(false);
-        setBlobScaleX(1);
-        setBlobScaleY(1);
-      }
+      };
+      cancelAnimationFrame(rafId);
+      rafId = requestAnimationFrame(run);
     };
     window.addEventListener("mousemove", handleMouseMove);
-    return () => window.removeEventListener("mousemove", handleMouseMove);
-  }, []);
+    return () => {
+      cancelAnimationFrame(rafId);
+      window.removeEventListener("mousemove", handleMouseMove);
+    };
+  }, [springX, springY]);
 
   const workItems = [
     {
@@ -133,19 +158,15 @@ const Home = () => {
   const isBlobActive = isTextHover || hoveredWork !== null;
   const variants = {
     default: {
-      x: cursorPosition.x - cursorSize / 2,
-      y: cursorPosition.y - cursorSize / 2,
-      width: cursorSize,
-      height: cursorSize,
+      width: effectiveCursorSize,
+      height: effectiveCursorSize,
       borderRadius: "50%",
       scaleX: 1,
       scaleY: 1,
     },
     text: {
-      x: cursorPosition.x - cursorSize / 2,
-      y: cursorPosition.y - cursorSize / 2,
-      width: cursorSize,
-      height: cursorSize,
+      width: effectiveCursorSize,
+      height: effectiveCursorSize,
       borderRadius: "60% 40% 55% 45% / 40% 60% 45% 55%",
       scaleX: blobScaleX,
       scaleY: blobScaleY,
@@ -160,26 +181,35 @@ const Home = () => {
         transition={{ type: "spring", bounce: 0.25, duration: 0.3 }}
         className="cursor blob"
         style={{
-          backgroundColor: cursorColor,
-          pointerEvents: hoveredWork !== null ? "auto" : "none",
-          mixBlendMode: hoveredWork !== null ? "normal" : "difference",
-        }}
-        onClick={() => {
-          if (hoveredWork !== null) {
-            const item = workItems.find((w) => w.id === hoveredWork);
-            if (item?.image && item.image.endsWith(".mp4")) {
-              setPlayerSrc(item.image);
-              setIsPlayerOpen(true);
-            }
-          }
+          x: springX,
+          y: springY,
+          backgroundColor: "#ff9500",
+          pointerEvents: "none",
+          mixBlendMode: isTextHover ? "difference" : "normal",
+          display: "flex",
+          alignItems: "center",
+          justifyContent: "center",
         }}
       >
-        {hoveredWork !== null && (
-          <Play
-            size={Math.round(cursorSize * 0.38)}
-            style={{ color: cursorColor === "#ffffff" ? "#000000" : "#ffffff" }}
-          />
-        )}
+        <AnimatePresence>
+          {hoveredWork !== null &&
+            workItems
+              .find((i) => i.id === hoveredWork)
+              ?.image.includes(".mp4") && (
+              <motion.div
+                initial={{ opacity: 0, scale: 0 }}
+                animate={{ opacity: 1, scale: 1 }}
+                exit={{ opacity: 0, scale: 0 }}
+                transition={{ duration: 0.2 }}
+              >
+                {playingVideoId === hoveredWork ? (
+                  <Pause size={32} fill="white" className="text-white" />
+                ) : (
+                  <Play size={32} fill="white" className="text-white ml-1" />
+                )}
+              </motion.div>
+            )}
+        </AnimatePresence>
       </motion.div>
       {isPlayerOpen && playerSrc && (
         <div className="fixed inset-0 z-[10000] bg-black/90 backdrop-blur-sm flex items-center justify-center">
@@ -280,11 +310,16 @@ const Home = () => {
       <section className=" pb-20 px-6">
         <div className="max-w-7xl mx-auto">
           <div className="flex items-end h-fit pt-5">
-            <h1 className=" lg:text-7xl text-5xl font-bold leading-tight mb-8 pt-24 w-full">
+            <motion.h1
+              initial={{ opacity: 0, y: 20 }}
+              animate={{ opacity: 1, y: 0 }}
+              transition={{ duration: 1, ease: "easeOut" }}
+              className=" lg:text-7xl text-5xl font-bold leading-tight mb-8 pt-24 w-full"
+            >
               An agency for
               <br />
               all things <span className="text-[#ff9500]"> video </span>
-            </h1>
+            </motion.h1>
             <motion.div
               className="w-16 h-16"
               style={{
@@ -310,17 +345,15 @@ const Home = () => {
               }}
             />
           </div>
-          <p className="text-xl md:text-2xl text-gray-400 max-w-2xl mb-12">
+          <motion.p
+            initial={{ opacity: 0, y: 20 }}
+            animate={{ opacity: 1, y: 0 }}
+            transition={{ duration: 1, delay: 0.3, ease: "easeOut" }}
+            className="text-xl md:text-2xl text-gray-400 max-w-2xl mb-12"
+          >
             We create compelling visual stories that captivate audiences and
             drive meaningful results for your brand.
-          </p>
-          {/* <button className="group bg-white text-black px-8 py-4 rounded-full text-lg font-medium hover:bg-gray-200 transition-all flex items-center gap-2">
-            View Our Work
-            <ArrowRight
-              className="group-hover:translate-x-1 transition-transform"
-              size={20}
-            />
-          </button> */}
+          </motion.p>
         </div>
       </section>
 
@@ -342,16 +375,16 @@ const Home = () => {
                 style={{ originX: 0 }}
               />
             </div>
-          
           </div>
 
           <div className="flex gap-2 overflow-x-scroll [&::-webkit-scrollbar]:hidden [-ms-overflow-style:none] [scrollbar-width:none]">
             {workItems.map((item) => {
-              const isVideo = item.image.endsWith(".mp4");
+              const isVideo = item.image.includes(".mp4");
               const isPlaying = playingVideoId === item.id;
               const isMuted = videoMuted[item.id] !== false; // Default to muted
 
-              const handleVideoClick = () => {
+              const handleVideoClick = (e?: React.MouseEvent) => {
+                e?.stopPropagation();
                 if (!isVideo) return;
                 const video = videoRefs.current[item.id];
                 if (!video) return;
@@ -387,42 +420,48 @@ const Home = () => {
               return (
                 <div
                   key={item.id}
-                  className="relative"
-                  onMouseEnter={() => {setHoveredWork(item.id); console.log('changed')}}
+                  className="relative group"
+                  onMouseEnter={() => setHoveredWork(item.id)}
                   onMouseLeave={() => setHoveredWork(null)}
+                  onClick={handleVideoClick}
                 >
                   {true ? (
                     <>
                       <video
-                        
-                        controls
-                        className="md:min-w-[80vh] min-w-[100vw] h-[500px] object-cover cursor-pointer bg-black"
+                        ref={(el) => (videoRefs.current[item.id] = el)}
+                        className={`min-w-[100vw] h-[500px] object-cover cursor-pointer bg-black transition-all duration-700 ease-[cubic-bezier(0.25,0.8,0.25,1)] ${
+                          isPlaying ? "md:min-w-[90vw]" : "md:min-w-[80vh]"
+                        }`}
                         playsInline
                         muted={isMuted}
-                        onClick={handleVideoClick}
                         onEnded={() => setPlayingVideoId(null)}
-                     
                       >
                         <source src={item.image} type="video/mp4" />
                       </video>
                       {/* Speaker Icon - appears when video is playing */}
-                      {isPlaying && (
-                        <motion.button
-                          initial={{ opacity: 0, scale: 0.8, y: -10 }}
-                          animate={{ opacity: 1, scale: 1, y: 0 }}
-                          exit={{ opacity: 0, scale: 0.8, y: -10 }}
-                          transition={{ type: "spring", damping: 20, stiffness: 300 }}
-                          onClick={handleMuteToggle}
-                          className="absolute top-4 right-4 z-20 flex h-12 w-12 items-center justify-center rounded-full bg-black/70 backdrop-blur-md border border-white/30 text-white transition-all hover:bg-black/90 hover:scale-110 hover:border-white/50 shadow-lg"
-                          aria-label={isMuted ? "Unmute" : "Mute"}
-                        >
-                          {isMuted ? (
-                            <VolumeX size={20} />
-                          ) : (
-                            <Volume2 size={20} />
-                          )}
-                        </motion.button>
-                      )}
+                      <AnimatePresence>
+                        {isPlaying && (
+                          <motion.button
+                            initial={{ opacity: 0, scale: 0.8, y: -10 }}
+                            animate={{ opacity: 1, scale: 1, y: 0 }}
+                            exit={{ opacity: 0, scale: 0.8, y: -10 }}
+                            transition={{
+                              type: "spring",
+                              damping: 20,
+                              stiffness: 300,
+                            }}
+                            onClick={handleMuteToggle}
+                            className="absolute top-4 right-4 z-20 flex h-12 w-12 items-center justify-center rounded-full bg-black/70 backdrop-blur-md border border-white/30 text-white transition-all hover:bg-black/90 hover:scale-110 hover:border-white/50 shadow-lg"
+                            aria-label={isMuted ? "Unmute" : "Mute"}
+                          >
+                            {isMuted ? (
+                              <VolumeX size={20} />
+                            ) : (
+                              <Volume2 size={20} />
+                            )}
+                          </motion.button>
+                        )}
+                      </AnimatePresence>
                     </>
                   ) : (
                     <img
@@ -432,7 +471,7 @@ const Home = () => {
                     />
                   )}
                   <div
-                    className={`absolute inset-0 bg-gradient-to-t from-black/80 via-black/40 to-transparent flex items-end p-6 transition-opacity duration-300 ${
+                    className={`absolute inset-0 bg-gradient-to-t from-black/80 via-black/40 to-transparent flex items-end p-6 transition-opacity duration-300 pointer-events-none ${
                       hoveredWork === item.id && !isPlaying
                         ? "opacity-100"
                         : "opacity-0"
@@ -445,7 +484,7 @@ const Home = () => {
                       <h3 className="text-2xl font-bold">{item.title}</h3>
                     </div>
                     {!isPlaying && (
-                      <div className="absolute top-1/2 left-1/2 -translate-x-1/2 -translate-y-1/2">
+                      <div className="absolute top-1/2 left-1/2 -translate-x-1/2 -translate-y-1/2 hidden">
                         <div className="w-16 h-16 rounded-full bg-white/20 backdrop-blur-sm flex items-center justify-center">
                           <Play size={24} fill="white" />
                         </div>
@@ -462,25 +501,51 @@ const Home = () => {
       {/* Services Section */}
       <section id="services" className="py-20 px-6 bg-zinc-950">
         <div className="max-w-7xl mx-auto">
-          <div className="mb-8 text-gray-400 text-sm tracking-widest">
+          <motion.div
+            initial={{ opacity: 0, y: 20 }}
+            whileInView={{ opacity: 1, y: 0 }}
+            viewport={{ once: true }}
+            transition={{ duration: 1, ease: "easeOut" }}
+            className="mb-8 text-gray-400 text-sm tracking-widest"
+          >
             OUR PROCESS
-          </div>
-          <h2 className="text-4xl md:text-5xl font-bold mb-16">
+          </motion.div>
+          <motion.h2
+            initial={{ opacity: 0, y: 20 }}
+            whileInView={{ opacity: 1, y: 0 }}
+            viewport={{ once: true }}
+            transition={{ duration: 1, delay: 0.2, ease: "easeOut" }}
+            className="text-4xl md:text-5xl font-bold mb-16"
+          >
             Video production
             <br />
             should be <span className="text-[#ff9500]"> easy </span>
-          </h2>
+          </motion.h2>
 
-          <p className="text-xl text-gray-400 mb-16 max-w-3xl">
+          <motion.p
+            initial={{ opacity: 0, y: 20 }}
+            whileInView={{ opacity: 1, y: 0 }}
+            viewport={{ once: true }}
+            transition={{ duration: 1, delay: 0.4, ease: "easeOut" }}
+            className="text-xl text-gray-400 mb-16 max-w-3xl"
+          >
             We prioritize flexibility, streamlined processes, and creative that
             positively impacts your business. From commercials to animation,
-            documentaries to branded content, we've got you covered.
-          </p>
+            documentaries to branded content, we&#39;ve got you covered.
+          </motion.p>
 
           <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6">
             {services.map((service, idx) => (
-              <div
+              <motion.div
                 key={idx}
+                initial={{ opacity: 0, y: 20 }}
+                whileInView={{ opacity: 1, y: 0 }}
+                viewport={{ once: true }}
+                transition={{
+                  duration: 1,
+                  delay: 0.2 + idx * 0.1,
+                  ease: "easeOut",
+                }}
                 className="group border border-gray-800 rounded-lg p-8 hover:bg-zinc-900 transition-all cursor-pointer hover:border-gray-600"
               >
                 <h3 className="text-2xl font-bold mb-3 group-hover:text-gray-300 transition-colors">
@@ -490,7 +555,7 @@ const Home = () => {
                 <div className="mt-6 opacity-0 group-hover:opacity-100 transition-opacity">
                   <ChevronRight className="text-white" />
                 </div>
-              </div>
+              </motion.div>
             ))}
           </div>
         </div>
@@ -499,23 +564,48 @@ const Home = () => {
       {/* About Section */}
       <section id="about" className="py-20 px-6">
         <div className="max-w-7xl mx-auto">
-          <div className="mb-8 text-gray-400 text-sm tracking-widest">
+          <motion.div
+            initial={{ opacity: 0, y: 20 }}
+            whileInView={{ opacity: 1, y: 0 }}
+            viewport={{ once: true }}
+            transition={{ duration: 1, ease: "easeOut" }}
+            className="mb-8 text-gray-400 text-sm tracking-widest"
+          >
             YOUR OBJECTIVES
-          </div>
-          <h2 className="text-4xl md:text-5xl font-bold mb-8">
+          </motion.div>
+          <motion.h2
+            initial={{ opacity: 0, y: 20 }}
+            whileInView={{ opacity: 1, y: 0 }}
+            viewport={{ once: true }}
+            transition={{ duration: 1, delay: 0.2, ease: "easeOut" }}
+            className="text-4xl md:text-5xl font-bold mb-8"
+          >
             We hear you
             <br />
             loud & clear
-          </h2>
-          <p className="text-xl text-gray-400 max-w-3xl mb-12">
-            Muddled messaging leads to uninspired, underperforming videos. We'll
-            work with you to clarify your story, then help you push it in
-            unexpected directions. Whether you need strategy first or you're
-            ready to cut footage, we'll take you from sticky note to final.mp4.
-          </p>
-          <button className="border border-white px-8 py-4 rounded-full hover:bg-white hover:text-black transition-all">
+          </motion.h2>
+          <motion.p
+            initial={{ opacity: 0, y: 20 }}
+            whileInView={{ opacity: 1, y: 0 }}
+            viewport={{ once: true }}
+            transition={{ duration: 1, delay: 0.4, ease: "easeOut" }}
+            className="text-xl text-gray-400 max-w-3xl mb-12"
+          >
+            Muddled messaging leads to uninspired, underperforming videos.
+            We&#39;ll work with you to clarify your story, then help you push it
+            in unexpected directions. Whether you need strategy first or
+            you&#39;re ready to cut footage, we&#39;ll take you from sticky note
+            to final.mp4.
+          </motion.p>
+          <motion.button
+            initial={{ opacity: 0, y: 20 }}
+            whileInView={{ opacity: 1, y: 0 }}
+            viewport={{ once: true }}
+            transition={{ duration: 1, delay: 0.6, ease: "easeOut" }}
+            className="border border-white px-8 py-4 rounded-full hover:bg-white hover:text-black transition-all"
+          >
             Learn More About Us
-          </button>
+          </motion.button>
         </div>
       </section>
 
@@ -555,7 +645,7 @@ const Home = () => {
       <section className="py-32 px-6">
         <div className="max-w-4xl mx-auto text-center">
           <h2 className="text-5xl md:text-6xl font-bold mb-8">
-            Let's work together!
+            Let&#39;s work together!
           </h2>
           <a
             href="mailto:hello@visionary.studio"
@@ -650,8 +740,8 @@ const Home = () => {
           </div>
         </div>
       </footer>
-     </div>
-       );
+    </div>
+  );
 };
 
 export default Home;
