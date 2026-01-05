@@ -209,7 +209,7 @@ const Home = () => {
         }`}
       >
         <div className="max-w-7xl mx-auto px-6 flex items-center justify-between">
-          <div className="text-5xl font-bold tracking-tight">LOGO</div>
+          <div className="text-xl font-bold tracking-tight">LOGO</div>
 
           <nav className="hidden md:flex items-center gap-8">
             <a href="#work" className="hover:text-gray-400 transition-colors">
@@ -394,20 +394,14 @@ const Home = () => {
                   {true ? (
                     <>
                       <video
-                        ref={(el) => {
-                          videoRefs.current[item.id] = el;
-                        }}
+                        
                         controls
-                        className="min-w-[80vh] h-[500px] object-cover cursor-pointer bg-black"
+                        className="md:min-w-[80vh] min-w-[100vw] h-[500px] object-cover cursor-pointer bg-black"
                         playsInline
                         muted={isMuted}
                         onClick={handleVideoClick}
                         onEnded={() => setPlayingVideoId(null)}
-                        onLoadedMetadata={(e) => {
-                          // Ensure video shows first frame
-                          const video = e.currentTarget;
-                          video.currentTime = 0.1;
-                        }}
+                     
                       >
                         <source src={item.image} type="video/mp4" />
                       </video>
