@@ -8,7 +8,6 @@
   border-radius: 50%;
   z-index: 9999;
   pointer-events: none;
-  mix-blend-mode: difference;
   will-change: transform, width, height, border-radius;
   display: flex;
   align-items: center;

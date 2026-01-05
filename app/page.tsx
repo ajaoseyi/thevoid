@@ -31,6 +31,8 @@ const Home = () => {
   const [playingVideoId, setPlayingVideoId] = useState<number | null>(null);
   const [videoMuted, setVideoMuted] = useState<{ [key: number]: boolean }>({});
   const videoRefs = useRef<{ [key: number]: HTMLVideoElement | null }>({});
+  const workScrollRef = useRef<HTMLDivElement | null>(null);
+  const itemRefs = useRef<{ [key: number]: HTMLDivElement | null }>({});
 
   const rawX = useMotionValue(0);
   const rawY = useMotionValue(0);
@@ -154,6 +156,44 @@ const Home = () => {
         "https://images.unsplash.com/photo-1485846234645-a62644f84728?w=600&h=400&fit=crop",
     },
   ];
+  const Typewriter = ({
+    text,
+    duration = 1.5,
+    startDelay = 0,
+    className,
+  }: {
+    text: string;
+    duration?: number;
+    startDelay?: number;
+    className?: string;
+  }) => {
+    const [count, setCount] = useState(0);
+    useEffect(() => {
+      let intervalId: number | null = null;
+      const total = text.length;
+      const interval = Math.max((duration * 1000) / Math.max(total, 1), 20);
+      const timeoutId = window.setTimeout(() => {
+        intervalId = window.setInterval(() => {
+          setCount((c) => {
+            const next = c + 1;
+            if (next >= total) {
+              if (intervalId) {
+                window.clearInterval(intervalId);
+              }
+            }
+            return next;
+          });
+        }, interval);
+      }, startDelay * 1000);
+      return () => {
+        if (intervalId) {
+          window.clearInterval(intervalId);
+        }
+        window.clearTimeout(timeoutId);
+      };
+    }, [text, duration, startDelay]);
+    return <span className={className}>{text.slice(0, count)}</span>;
+  };
 
   const isBlobActive = isTextHover || hoveredWork !== null;
   const variants = {
@@ -185,7 +225,6 @@ const Home = () => {
           y: springY,
           backgroundColor: "#ff9500",
           pointerEvents: "none",
-          mixBlendMode: isTextHover ? "difference" : "normal",
           display: "flex",
           alignItems: "center",
           justifyContent: "center",
@@ -309,17 +348,28 @@ const Home = () => {
       {/* Hero Section */}
       <section className=" pb-20 px-6">
         <div className="max-w-7xl mx-auto">
-          <div className="flex items-end h-fit pt-5">
-            <motion.h1
-              initial={{ opacity: 0, y: 20 }}
-              animate={{ opacity: 1, y: 0 }}
-              transition={{ duration: 1, ease: "easeOut" }}
-              className=" lg:text-7xl text-5xl font-bold leading-tight mb-8 pt-24 w-full"
-            >
-              An agency for
-              <br />
-              all things <span className="text-[#ff9500]"> video </span>
-            </motion.h1>
+          <div className="flex items-end h-fit pt-5 gap-12 md:gap-88">
+            <div>
+              <motion.h1
+                initial={{ opacity: 0, y: 20 }}
+                animate={{ opacity: 1, y: 0 }}
+                transition={{ duration: 1, ease: "easeOut" }}
+                className=" lg:text-7xl text-5xl font-bold leading-tight mb-2 pt-24 w-full"
+              >
+                THE VOID.
+              </motion.h1>
+              <motion.h1
+                initial={{ opacity: 0, y: 20 }}
+                animate={{ opacity: 1, y: 0 }}
+                transition={{ duration: 1, ease: "easeOut" }}
+                className=" lg:text-3xl text-2xl font-medium leading-tight  w-full"
+              >
+                <Typewriter text="An agency for all things " duration={2} />
+                <span className="text-[#ff9500]">
+                  <Typewriter text="video" duration={1} startDelay={2} />
+                </span>
+              </motion.h1>
+            </div>
             <motion.div
               className="w-16 h-16"
               style={{
@@ -345,15 +395,6 @@ const Home = () => {
               }}
             />
           </div>
-          <motion.p
-            initial={{ opacity: 0, y: 20 }}
-            animate={{ opacity: 1, y: 0 }}
-            transition={{ duration: 1, delay: 0.3, ease: "easeOut" }}
-            className="text-xl md:text-2xl text-gray-400 max-w-2xl mb-12"
-          >
-            We create compelling visual stories that captivate audiences and
-            drive meaningful results for your brand.
-          </motion.p>
         </div>
       </section>
 
@@ -362,7 +403,15 @@ const Home = () => {
         <div className="max-w-7xl mx-auto">
           <div className="flex items-center justify-between mb-12">
             <div className="relative inline-block">
-              <h2 className="text-4xl md:text-5xl font-bold">Featured Work</h2>
+              <motion.h2
+                initial={{ opacity: 0, y: 20 }}
+                whileInView={{ opacity: 1, y: 0 }}
+                viewport={{ once: false }}
+                transition={{ duration: 1, ease: "easeOut" }}
+                className="text-4xl md:text-5xl font-bold"
+              >
+                Featured Work
+              </motion.h2>
               <motion.div
                 className="absolute bottom-[-8px] left-0 h-[2px] bg-[#ff9500]"
                 initial={{ width: "50%" }}
@@ -377,7 +426,14 @@ const Home = () => {
             </div>
           </div>
 
-          <div className="flex gap-2 overflow-x-scroll [&::-webkit-scrollbar]:hidden [-ms-overflow-style:none] [scrollbar-width:none]">
+          <motion.div
+            initial={{ opacity: 0, y: 20 }}
+            whileInView={{ opacity: 1, y: 0 }}
+            viewport={{ once: true }}
+            transition={{ duration: 1, delay: 0.2, ease: "easeOut" }}
+            className="flex gap-2 overflow-x-scroll [&::-webkit-scrollbar]:hidden [-ms-overflow-style:none] [scrollbar-width:none]"
+            ref={workScrollRef}
+          >
             {workItems.map((item) => {
               const isVideo = item.image.includes(".mp4");
               const isPlaying = playingVideoId === item.id;
@@ -401,6 +457,18 @@ const Home = () => {
                   });
                   video.play();
                   setPlayingVideoId(item.id);
+                  // Snap the playing item to the left edge of the scroll container
+                  // Use a microtask to ensure layout reflects size changes before scrolling
+                  setTimeout(() => {
+                    const container = workScrollRef.current;
+                    const itemEl = itemRefs.current[item.id];
+                    if (container && itemEl) {
+                      container.scrollTo({
+                        left: itemEl.offsetLeft,
+                        behavior: "smooth",
+                      });
+                    }
+                  }, 0);
                 }
               };
 
@@ -424,13 +492,18 @@ const Home = () => {
                   onMouseEnter={() => setHoveredWork(item.id)}
                   onMouseLeave={() => setHoveredWork(null)}
                   onClick={handleVideoClick}
+                  ref={(el) => {
+                    itemRefs.current[item.id] = el;
+                  }}
                 >
                   {true ? (
                     <>
                       <video
-                        ref={(el) => {(videoRefs.current[item.id]  = el)}}
+                        ref={(el) => {
+                          videoRefs.current[item.id] = el;
+                        }}
                         className={`min-w-[100vw] h-[500px] object-cover cursor-pointer bg-black transition-all duration-700 ease-[cubic-bezier(0.25,0.8,0.25,1)] ${
-                          isPlaying ? "md:min-w-[90vw]" : "md:min-w-[80vh]"
+                          isPlaying ? "md:min-w-[97vw]" : "md:min-w-[80vh]"
                         }`}
                         playsInline
                         muted={isMuted}
@@ -494,7 +567,7 @@ const Home = () => {
                 </div>
               );
             })}
-          </div>
+          </motion.div>
         </div>
       </section>
 
@@ -504,7 +577,7 @@ const Home = () => {
           <motion.div
             initial={{ opacity: 0, y: 20 }}
             whileInView={{ opacity: 1, y: 0 }}
-            viewport={{ once: true }}
+            viewport={{ once: false }}
             transition={{ duration: 1, ease: "easeOut" }}
             className="mb-8 text-gray-400 text-sm tracking-widest"
           >
@@ -513,7 +586,7 @@ const Home = () => {
           <motion.h2
             initial={{ opacity: 0, y: 20 }}
             whileInView={{ opacity: 1, y: 0 }}
-            viewport={{ once: true }}
+            viewport={{ once: false }}
             transition={{ duration: 1, delay: 0.2, ease: "easeOut" }}
             className="text-4xl md:text-5xl font-bold mb-16"
           >
@@ -525,7 +598,7 @@ const Home = () => {
           <motion.p
             initial={{ opacity: 0, y: 20 }}
             whileInView={{ opacity: 1, y: 0 }}
-            viewport={{ once: true }}
+            viewport={{ once: false }}
             transition={{ duration: 1, delay: 0.4, ease: "easeOut" }}
             className="text-xl text-gray-400 mb-16 max-w-3xl"
           >
@@ -540,7 +613,7 @@ const Home = () => {
                 key={idx}
                 initial={{ opacity: 0, y: 20 }}
                 whileInView={{ opacity: 1, y: 0 }}
-                viewport={{ once: true }}
+                viewport={{ once: false }}
                 transition={{
                   duration: 1,
                   delay: 0.2 + idx * 0.1,
@@ -576,18 +649,18 @@ const Home = () => {
           <motion.h2
             initial={{ opacity: 0, y: 20 }}
             whileInView={{ opacity: 1, y: 0 }}
-            viewport={{ once: true }}
+            viewport={{ once: false }}
             transition={{ duration: 1, delay: 0.2, ease: "easeOut" }}
             className="text-4xl md:text-5xl font-bold mb-8"
           >
             We hear you
             <br />
-       <span className="text-[#ff9500]">     loud & clear </span>
+            <span className="text-[#ff9500]"> loud & clear </span>
           </motion.h2>
           <motion.p
             initial={{ opacity: 0, y: 20 }}
             whileInView={{ opacity: 1, y: 0 }}
-            viewport={{ once: true }}
+            viewport={{ once: false }}
             transition={{ duration: 1, delay: 0.4, ease: "easeOut" }}
             className="text-xl text-gray-400 max-w-3xl mb-12"
           >
@@ -600,7 +673,7 @@ const Home = () => {
           <motion.button
             initial={{ opacity: 0, y: 20 }}
             whileInView={{ opacity: 1, y: 0 }}
-            viewport={{ once: true }}
+            viewport={{ once: false }}
             transition={{ duration: 1, delay: 0.6, ease: "easeOut" }}
             className="border border-white px-8 py-4 rounded-full hover:bg-white hover:text-black transition-all"
           >
@@ -613,7 +686,15 @@ const Home = () => {
       <section id="blog" className="py-20 px-6 bg-zinc-950">
         <div className="max-w-7xl mx-auto">
           <div className="flex items-center justify-between mb-12">
-            <h2 className="text-4xl md:text-5xl font-bold">Featured Posts</h2>
+            <motion.h2
+              initial={{ opacity: 0, y: 20 }}
+              whileInView={{ opacity: 1, y: 0 }}
+              viewport={{ once: false }}
+              transition={{ duration: 1, ease: "easeOut" }}
+              className="text-4xl md:text-5xl font-bold"
+            >
+              Featured Posts
+            </motion.h2>
             <a
               href="#"
               className="text-gray-400 hover:text-white flex items-center gap-2 transition-colors"
@@ -624,7 +705,18 @@ const Home = () => {
 
           <div className="grid grid-cols-1 md:grid-cols-3 gap-8">
             {blogPosts.map((post, idx) => (
-              <div key={idx} className="group cursor-pointer">
+              <motion.div
+                key={idx}
+                initial={{ opacity: 0, y: 20 }}
+                whileInView={{ opacity: 1, y: 0 }}
+                viewport={{ once: false }}
+                transition={{
+                  duration: 1,
+                  delay: 0.2 + idx * 0.1,
+                  ease: "easeOut",
+                }}
+                className="group cursor-pointer"
+              >
                 <div className="aspect-[3/2] overflow-hidden rounded-lg mb-4 bg-gray-900">
                   <img
                     src={post.image}
@@ -635,7 +727,7 @@ const Home = () => {
                 <h3 className="text-xl font-bold group-hover:text-gray-300 transition-colors">
                   {post.title}
                 </h3>
-              </div>
+              </motion.div>
             ))}
           </div>
         </div>
@@ -644,23 +736,39 @@ const Home = () => {
       {/* CTA Section */}
       <section className="py-32 px-6">
         <div className="max-w-4xl mx-auto text-center">
-          <h2 className="text-5xl md:text-6xl font-bold mb-8">
+          <motion.h2
+            initial={{ opacity: 0, y: 20 }}
+            whileInView={{ opacity: 1, y: 0 }}
+            viewport={{ once: false }}
+            transition={{ duration: 1, ease: "easeOut" }}
+            className="text-5xl md:text-6xl font-bold mb-8"
+          >
             Let&#39;s work together!
-          </h2>
-          <a
+          </motion.h2>
+          <motion.a
+            initial={{ opacity: 0, y: 20 }}
+            whileInView={{ opacity: 1, y: 0 }}
+            viewport={{ once: false }}
+            transition={{ duration: 1, delay: 0.2, ease: "easeOut" }}
             href="mailto:hello@visionary.studio"
             className="text-2xl md:text-3xl text-gray-400 hover:text-white transition-colors inline-block mb-12"
           >
             hello@thevoid.studio
-          </a>
-          <div className="flex flex-wrap justify-center gap-4">
+          </motion.a>
+          <motion.div
+            initial={{ opacity: 0, y: 20 }}
+            whileInView={{ opacity: 1, y: 0 }}
+            viewport={{ once: false }}
+            transition={{ duration: 1, delay: 0.4, ease: "easeOut" }}
+            className="flex flex-wrap justify-center gap-4"
+          >
             <button className="bg-white text-black px-8 py-4 rounded-full hover:bg-gray-200 transition-all">
               Start a Project
             </button>
             <button className="border border-white px-8 py-4 rounded-full hover:bg-white hover:text-black transition-all">
               View Portfolio
             </button>
-          </div>
+          </motion.div>
         </div>
       </section>
 
