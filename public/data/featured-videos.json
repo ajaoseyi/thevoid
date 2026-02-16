@@ -1,0 +1,39 @@
+{
+  "source": "seed",
+  "fetchedAt": "2026-02-15T00:00:00.000Z",
+  "account": "placeholder",
+  "videos": [
+    {
+      "id": "lemonade",
+      "tag": "Campaign",
+      "title": "Lemonade",
+      "poster": "/media/featured-lemonade.mp4",
+      "src": "/media/featured-lemonade.mp4",
+      "permalink": ""
+    },
+    {
+      "id": "void-reel",
+      "tag": "Reel",
+      "title": "VOID Story Cut",
+      "poster": "/media/featured-void-reel.mp4",
+      "src": "/media/featured-void-reel.mp4",
+      "permalink": ""
+    },
+    {
+      "id": "kaduna-chapter",
+      "tag": "Wedding",
+      "title": "Kaduna Chapter",
+      "poster": "/media/featured-kaduna-chapter.mp4",
+      "src": "/media/featured-kaduna-chapter.mp4",
+      "permalink": ""
+    },
+    {
+      "id": "free",
+      "tag": "Reel",
+      "title": "Free",
+      "poster": "/media/free.mp4",
+      "src": "/media/free.mp4",
+      "permalink": ""
+    }
+  ]
+}
