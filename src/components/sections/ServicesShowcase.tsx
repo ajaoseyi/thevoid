@@ -1,9 +1,12 @@
+import { useEffect, useState } from 'react'
+
 const contentCards = [
-  'Brand campaigns',
-  'Commercial shoots',
-  'Social-first visuals',
-  'Editorial stories',
+  { title: 'Brand campaigns', imageNumber: 1 },
+  { title: 'Social-first visuals', imageNumber: 3 },
+  { title: 'Editorial stories', imageNumber: 4 },
 ]
+
+const numberWords = ['one', 'two', 'three', 'four', 'five', 'six', 'seven', 'eight']
 
 const consultingCards = [
   {
@@ -20,11 +23,115 @@ const consultingCards = [
   },
 ]
 
-const brandTiles = ['Identity systems', 'Typography kit', 'Visual language', 'Brand atlas']
+const designBrandingImageNames = [
+  'one',
+  'two',
+  'three',
+  'four',
+  'five',
+  'six',
+  'seven',
+  'eight',
+  'ten',
+  'eleven',
+  'twelve',
+  'thirteen',
+]
 
 const productCards = ['Printed materials', 'Custom merchandise']
 
+type LightboxImage = { src: string; fallbackSrc: string; alt: string }
+
 const ServicesShowcase = () => {
+  const [isContentGalleryOpen, setIsContentGalleryOpen] = useState(false)
+  const [isBrandingGalleryOpen, setIsBrandingGalleryOpen] = useState(false)
+  const [activeImageState, setActiveImageState] = useState<{
+    images: LightboxImage[]
+    currentIndex: number
+  } | null>(null)
+  const brandingPreviewItems = designBrandingImageNames.slice(0, 4)
+  const contentPreviewItems = contentCards.slice(0, 4)
+  const getContentImage = (imageNumber: number, title: string): LightboxImage => ({
+    src: `/images/content-creation-${imageNumber}.jpg`,
+    fallbackSrc: `/images/content-creation-${numberWords[imageNumber - 1]}.jpg`,
+    alt: title,
+  })
+  const getDesignBrandingImage = (index: number, imageName: string): LightboxImage => ({
+    src: `/images/design-branding-${index + 1}.jpg`,
+    fallbackSrc: `/images/design-branding-${imageName}.jpg`,
+    alt: `Design and branding ${index + 1}`,
+  })
+  const contentLightboxImages = numberWords.map((name, index) =>
+    getContentImage(index + 1, `Content creation ${index + 1}`),
+  )
+  const brandingLightboxImages = designBrandingImageNames.map((imageName, index) =>
+    getDesignBrandingImage(index, imageName),
+  )
+  const activeImage = activeImageState
+    ? activeImageState.images[activeImageState.currentIndex] ?? null
+    : null
+
+  const openLightboxAtIndex = (images: LightboxImage[], index: number) => {
+    if (!images.length) {
+      return
+    }
+    const normalizedIndex = ((index % images.length) + images.length) % images.length
+    setActiveImageState({ images, currentIndex: normalizedIndex })
+  }
+
+  const goToLightboxImage = (direction: 'next' | 'prev') => {
+    if (!activeImageState) {
+      return
+    }
+    const delta = direction === 'next' ? 1 : -1
+    openLightboxAtIndex(activeImageState.images, activeImageState.currentIndex + delta)
+  }
+
+  useEffect(() => {
+    if (!activeImage && !isBrandingGalleryOpen && !isContentGalleryOpen) {
+      return
+    }
+
+    const onKeyDown = (event: KeyboardEvent) => {
+      if (event.key === 'Escape') {
+        if (activeImage) {
+          setActiveImageState(null)
+          return
+        }
+
+        if (isContentGalleryOpen) {
+          setIsContentGalleryOpen(false)
+          return
+        }
+
+        setIsBrandingGalleryOpen(false)
+      }
+
+      if (!activeImage) {
+        return
+      }
+
+      if (event.key === 'ArrowRight') {
+        event.preventDefault()
+        goToLightboxImage('next')
+      }
+
+      if (event.key === 'ArrowLeft') {
+        event.preventDefault()
+        goToLightboxImage('prev')
+      }
+    }
+
+    const previousOverflow = document.body.style.overflow
+    document.body.style.overflow = 'hidden'
+    window.addEventListener('keydown', onKeyDown)
+
+    return () => {
+      document.body.style.overflow = previousOverflow
+      window.removeEventListener('keydown', onKeyDown)
+    }
+  }, [activeImage, activeImageState, isBrandingGalleryOpen, isContentGalleryOpen])
+
   return (
     <section className="services-showcase" id="mission">
       <div className="expertise-intro">
@@ -40,15 +147,46 @@ const ServicesShowcase = () => {
 
       <article className="expertise-block">
         <div className="expertise-block-head">
-          <span>01 / Services</span>
           <h3>Content Creation</h3>
           <p>Narrative-first production for digital campaigns, launches, and episodic work.</p>
+          
         </div>
+         <div className="content-meta-row mb-5">
+            <span>01 / Services</span>
+            <button
+              className="content-view-all"
+              onClick={() => setIsContentGalleryOpen(true)}
+              type="button"
+            >
+              View all
+            </button>
+          </div>
         <div className="content-creation-grid">
-          {contentCards.map((card, index) => (
-            <div className={`content-card shade-${index + 1}`} key={card}>
-              <div className="content-card-overlay">{card}</div>
-            </div>
+
+          {contentPreviewItems.map((card, index) => (
+            <button
+              className={`content-card content-card-button shade-${index + 1}`}
+              key={card.title}
+              type="button"
+              onClick={() => openLightboxAtIndex(contentLightboxImages, card.imageNumber - 1)}
+            >
+              <img
+                className="content-card-image"
+                src={`/images/content-creation-${card.imageNumber}.jpg`}
+                alt={card.title}
+                loading="lazy"
+                onError={(event) => {
+                  const target = event.currentTarget
+                  const fallbackSrc = getContentImage(card.imageNumber, card.title).fallbackSrc
+                  if (target.dataset.fallbackApplied === 'true') {
+                    return
+                  }
+                  target.dataset.fallbackApplied = 'true'
+                  target.src = fallbackSrc
+                }}
+              />
+              <div className="content-card-overlay">{card.title}</div>
+            </button>
           ))}
         </div>
       </article>
@@ -113,7 +251,16 @@ const ServicesShowcase = () => {
 
       <article className="expertise-block branding-block">
         <div className="branding-copy">
-          <span>04 / Services</span>
+          <div className="branding-meta-row">
+            <span>04 / Services</span>
+            <button
+              className="branding-view-all"
+              onClick={() => setIsBrandingGalleryOpen(true)}
+              type="button"
+            >
+              View all
+            </button>
+          </div>
           <h3>Design &amp; Branding</h3>
           <p>
             Visual identity systems designed for digital-first brands that need consistency
@@ -121,10 +268,29 @@ const ServicesShowcase = () => {
           </p>
         </div>
         <div className="branding-grid">
-          {brandTiles.map((tile, index) => (
-            <div className={`branding-tile tile-${index + 1}`} key={tile}>
-              <span>{tile}</span>
-            </div>
+          {brandingPreviewItems.map((imageName, index) => (
+            <button
+              className="branding-tile branding-tile-button"
+              key={imageName}
+              type="button"
+              onClick={() => openLightboxAtIndex(brandingLightboxImages, index)}
+            >
+              <img
+                className="branding-tile-image"
+                src={`/images/design-branding-${index + 1}.jpg`}
+                alt={`Design and branding ${index + 1}`}
+                loading="lazy"
+                onError={(event) => {
+                  const target = event.currentTarget
+                  const fallbackSrc = getDesignBrandingImage(index, imageName).fallbackSrc
+                  if (target.dataset.fallbackApplied === 'true') {
+                    return
+                  }
+                  target.dataset.fallbackApplied = 'true'
+                  target.src = fallbackSrc
+                }}
+              />
+            </button>
           ))}
         </div>
       </article>
@@ -145,24 +311,7 @@ const ServicesShowcase = () => {
         </div>
       </article>
 
-      <article className="expertise-block products-block">
-        <div className="products-copy">
-          <span>06 / Services</span>
-          <h3>Merchandise &amp; Printing</h3>
-          <p>
-            Packaging systems, press-ready files, and premium merch kits produced for
-            campaigns, events, and team drops.
-          </p>
-        </div>
-        <div className="products-grid">
-          {productCards.map((card) => (
-            <div className="product-card" key={card}>
-              <p>{card}</p>
-            </div>
-          ))}
-        </div>
-      </article>
-
+ 
       <div className="services-final-cta">
         <h3>
           Ready to <em>step into the void?</em>
@@ -177,6 +326,160 @@ const ServicesShowcase = () => {
           </button>
         </div>
       </div>
+
+      {isContentGalleryOpen ? (
+        <div
+          aria-label="Content creation examples"
+          className="content-gallery-modal"
+          onClick={() => setIsContentGalleryOpen(false)}
+          role="dialog"
+        >
+          <div className="content-gallery-panel" onClick={(event) => event.stopPropagation()}>
+            <div className="content-gallery-head">
+              <h4> Content Creation</h4>
+              <button
+                aria-label="Close content creation gallery"
+                className="content-gallery-close"
+                onClick={() => setIsContentGalleryOpen(false)}
+                type="button"
+              >
+                Close
+              </button>
+            </div>
+            <div className="content-gallery-grid">
+              {numberWords.map((name, index) => (
+                <button
+                  className="content-gallery-item"
+                  key={`${name}-content-modal`}
+                  onClick={() => openLightboxAtIndex(contentLightboxImages, index)}
+                  type="button"
+                >
+                  <img
+                    alt={`Content creation ${index + 1}`}
+                    className="content-gallery-image"
+                    src={`/images/content-creation-${index + 1}.jpg`}
+                    loading="lazy"
+                    onError={(event) => {
+                      const target = event.currentTarget
+                      const fallbackSrc = getContentImage(index + 1, `Content creation ${index + 1}`).fallbackSrc
+                      if (target.dataset.fallbackApplied === 'true') {
+                        return
+                      }
+                      target.dataset.fallbackApplied = 'true'
+                      target.src = fallbackSrc
+                    }}
+                  />
+                </button>
+              ))}
+            </div>
+          </div>
+        </div>
+      ) : null}
+
+      {isBrandingGalleryOpen ? (
+        <div
+          aria-label="Design and branding examples"
+          className="branding-gallery-modal"
+          onClick={() => setIsBrandingGalleryOpen(false)}
+          role="dialog"
+        >
+          <div className="branding-gallery-panel" onClick={(event) => event.stopPropagation()}>
+            <div className="branding-gallery-head">
+              <h4>Design &amp; Branding</h4>
+              <button
+                aria-label="Close design and branding gallery"
+                className="branding-gallery-close"
+                onClick={() => setIsBrandingGalleryOpen(false)}
+                type="button"
+              >
+                Close
+              </button>
+            </div>
+            <div className="branding-gallery-grid">
+              {designBrandingImageNames.map((imageName, index) => (
+                <button
+                  className="branding-gallery-item"
+                  key={`${imageName}-modal`}
+                  onClick={() => openLightboxAtIndex(brandingLightboxImages, index)}
+                  type="button"
+                >
+                  <img
+                    alt={`Design and branding ${index + 1}`}
+                    className="branding-gallery-image"
+                    src={`/images/design-branding-${index + 1}.jpg`}
+                    loading="lazy"
+                    onError={(event) => {
+                      const target = event.currentTarget
+                      const fallbackSrc = getDesignBrandingImage(index, imageName).fallbackSrc
+                      if (target.dataset.fallbackApplied === 'true') {
+                        return
+                      }
+                      target.dataset.fallbackApplied = 'true'
+                      target.src = fallbackSrc
+                    }}
+                  />
+                </button>
+              ))}
+            </div>
+          </div>
+        </div>
+      ) : null}
+
+      {activeImage ? (
+        <div
+          aria-label="Content image preview"
+          className="content-lightbox"
+          onClick={() => setActiveImageState(null)}
+          role="dialog"
+        >
+          <button
+            aria-label="Close image preview"
+            className="content-lightbox-close"
+            onClick={() => setActiveImageState(null)}
+            type="button"
+          >
+            Close
+          </button>
+          <div className="content-lightbox-stage" onClick={(event) => event.stopPropagation()}>
+            <button
+              aria-label="Previous image"
+              className="content-lightbox-nav content-lightbox-nav-prev"
+              onClick={(event) => {
+                event.stopPropagation()
+                goToLightboxImage('prev')
+              }}
+              type="button"
+            >
+              <span aria-hidden="true">&lt;</span>
+            </button>
+            <button
+              aria-label="Next image"
+              className="content-lightbox-nav content-lightbox-nav-next"
+              onClick={(event) => {
+                event.stopPropagation()
+                goToLightboxImage('next')
+              }}
+              type="button"
+            >
+              <span aria-hidden="true">&gt;</span>
+            </button>
+            <img
+              key={activeImage.src}
+              alt={activeImage.alt}
+              className="content-lightbox-image"
+              src={activeImage.src}
+              onError={(event) => {
+                const target = event.currentTarget
+                if (target.dataset.fallbackApplied === 'true') {
+                  return
+                }
+                target.dataset.fallbackApplied = 'true'
+                target.src = activeImage.fallbackSrc
+              }}
+            />
+          </div>
+        </div>
+      ) : null}
     </section>
   )
 }

@@ -15,6 +15,28 @@ const introWords = ['the', 'studio', 're imagining', 'your', 'brand']
 const INTRO_WORD_STEP_MS = 1600
 const INTRO_WORD_ANIMATION_MS = 1450
 const INTRO_OUTRO_MS = 850
+const SCROLL_DURATION_MS = 820
+
+const easeInOutCubic = (t: number) => (t < 0.5 ? 4 * t * t * t : 1 - Math.pow(-2 * t + 2, 3) / 2)
+
+const animateWindowScroll = (targetTop: number, durationMs = SCROLL_DURATION_MS) => {
+  const startTop = window.scrollY
+  const distance = targetTop - startTop
+  if (Math.abs(distance) < 2) return
+
+  const startTime = performance.now()
+  const tick = (now: number) => {
+    const elapsed = now - startTime
+    const progress = Math.min(1, elapsed / durationMs)
+    const eased = easeInOutCubic(progress)
+    window.scrollTo(0, startTop + distance * eased)
+    if (progress < 1) {
+      window.requestAnimationFrame(tick)
+    }
+  }
+
+  window.requestAnimationFrame(tick)
+}
 
 function App() {
   const [path, setPath] = useState(() => normalizePath(window.location.pathname))
@@ -71,17 +93,32 @@ function App() {
   const navigate = useMemo(
     () =>
       (to: string) => {
+        const reducedMotion = window.matchMedia('(prefers-reduced-motion: reduce)').matches
         const url = new URL(to, window.location.origin)
         const nextPath = normalizePath(url.pathname)
         window.history.pushState({}, '', `${url.pathname}${url.search}${url.hash}`)
         setPath(nextPath)
+
         if (url.hash) {
           requestAnimationFrame(() => {
-            const target = document.querySelector(url.hash)
-            target?.scrollIntoView({ behavior: 'smooth', block: 'start' })
+            requestAnimationFrame(() => {
+              const target = document.querySelector(url.hash)
+              if (!target) return
+
+              const top = window.scrollY + target.getBoundingClientRect().top
+              if (reducedMotion) {
+                window.scrollTo(0, top)
+                return
+              }
+              animateWindowScroll(top)
+            })
           })
         } else {
-          window.scrollTo({ top: 0, behavior: 'smooth' })
+          if (reducedMotion) {
+            window.scrollTo(0, 0)
+            return
+          }
+          animateWindowScroll(0)
         }
       },
     [],

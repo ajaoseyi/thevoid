@@ -1,4 +1,4 @@
-import { useEffect, useRef, useState, type MouseEvent, type PointerEvent } from 'react'
+import { useEffect, useMemo, useRef, useState, type MouseEvent, type PointerEvent } from 'react'
 
 type VideoItem = {
   id: string
@@ -19,13 +19,6 @@ const fallbackVideos: VideoItem[] = [
     src: '/media/featured-lemonade.mp4',
   },
   {
-    id: 'void-reel',
-    tag: 'Reel',
-    title: 'VOID Story Cut',
-    poster: '/media/featured-void-reel.mp4',
-    src: '/media/featured-void-reel.mp4',
-  },
-  {
     id: 'kaduna-chapter',
     tag: 'Wedding',
     title: 'Kaduna Chapter',
@@ -34,12 +27,45 @@ const fallbackVideos: VideoItem[] = [
   },
   {
     id: 'free',
-    tag: 'Reel',
-    title: 'Free',
+    tag: 'Car Sessions ',
+    title: 'BMW',
     poster: '/media/free.mp4',
     src: '/media/free.mp4',
   },
+
+  {
+    id: 'rayjan',
+    tag: 'Fashion House',
+    title: 'Rayjaj',
+    poster: '/media/featured-void-reel.mp4',
+    src: '/media/rayjay-void.mp4',
+  },
+  {
+    id: 'picnic-hangout',
+    tag: 'Lifestyle',
+    title: 'Picnic Hangout',
+    poster: '/media/social-media-mockup.mp4',
+    src: '/media/video-4.mp4',
+  },
+  {
+    id: 'video-three',
+    tag: 'Food Porn',
+    title: 'Pastries',
+    poster: '/media/featured-kaduna-chapter.mp4',
+    src: '/media/video-3.mp4',
+  },
+
+  {
+    id: 'food-porn',
+    tag: 'Food Porn',
+    title: 'Grills & Vibes',
+    poster: '/media/featured-lemonade.mp4',
+    src: '/media/video-2.mp4',
+  },
 ]
+
+const AUTO_ADVANCE_MS = 30_000
+const LOOP_MULTIPLIER = 3
 
 const normalizeVideoItem = (value: unknown): VideoItem | null => {
   if (!value || typeof value !== 'object') return null
@@ -79,32 +105,58 @@ const isInstagramCta = (cta?: string) => (cta ?? '').trim().toLowerCase() === 'f
 
 const VideoGrid = () => {
   const [videos, setVideos] = useState<VideoItem[]>(fallbackVideos)
-  const [hoveredId, setHoveredId] = useState<string | null>(null)
-  const [playingId, setPlayingId] = useState<string | null>(null)
+  const [isCarouselHovered, setIsCarouselHovered] = useState(false)
+  const [hoveredCardIndex, setHoveredCardIndex] = useState<number | null>(null)
+  const [playingCardIndex, setPlayingCardIndex] = useState<number | null>(null)
+  const [activeIndex, setActiveIndex] = useState(0)
   const [mutedById, setMutedById] = useState<Record<string, boolean>>(() =>
     Object.fromEntries(fallbackVideos.map((video) => [video.id, true])),
   )
   const videoRefs = useRef<Array<HTMLVideoElement | null>>([])
   const gridRef = useRef<HTMLDivElement | null>(null)
   const [isRevealed, setIsRevealed] = useState(false)
-  const playModeRef = useRef<{ id: string | null; mode: 'hover' | 'click' | null }>({
-    id: null,
+  const activeIndexRef = useRef(0)
+  const scrollSettleTimeoutRef = useRef<number | null>(null)
+  const playModeRef = useRef<{ index: number | null; mode: 'hover' | 'click' | null }>({
+    index: null,
     mode: null,
   })
+  const carouselVideos = useMemo(
+    () =>
+      Array.from({ length: LOOP_MULTIPLIER }, () => videos).flatMap((group) => group),
+    [videos],
+  )
+
+  const syncToCenteredCopy = (logicalIndex: number, smooth: boolean) => {
+    const container = gridRef.current
+    const baseCount = videos.length
+    if (!container || baseCount === 0) return
+
+    const normalizedIndex = ((logicalIndex % baseCount) + baseCount) % baseCount
+    const centeredIndex = baseCount + normalizedIndex
+    const target = container.children.item(centeredIndex) as HTMLElement | null
+    if (!target) return
+
+    container.scrollTo({
+      left: target.offsetLeft,
+      behavior: smooth ? 'smooth' : 'auto',
+    })
+    setActiveIndex(normalizedIndex)
+  }
 
   useEffect(() => {
     const cursor = document.querySelector('.custom-cursor') as HTMLDivElement | null
     if (!cursor) return
 
-    if (!hoveredId) {
+    if (hoveredCardIndex === null) {
       cursor.dataset.mode = 'default'
       cursor.dataset.action = ''
       return
     }
 
     cursor.dataset.mode = 'video'
-    cursor.dataset.action = playingId === hoveredId ? 'pause' : 'play'
-  }, [hoveredId, playingId])
+    cursor.dataset.action = playingCardIndex === hoveredCardIndex ? 'pause' : 'play'
+  }, [hoveredCardIndex, playingCardIndex])
 
   useEffect(() => {
     const cursor = document.querySelector('.custom-cursor') as HTMLDivElement | null
@@ -114,6 +166,10 @@ const VideoGrid = () => {
       cursor.dataset.action = ''
     }
   }, [])
+
+  useEffect(() => {
+    activeIndexRef.current = activeIndex
+  }, [activeIndex])
 
   useEffect(() => {
     let isMounted = true
@@ -138,7 +194,10 @@ const VideoGrid = () => {
           .filter((entry): entry is VideoItem => entry !== null)
 
         if (isMounted && normalized.length > 0) {
-          setVideos(normalized)
+          const merged = [...fallbackVideos, ...normalized].filter(
+            (video, index, arr) => arr.findIndex((entry) => entry.id === video.id) === index,
+          )
+          setVideos(merged)
         }
       } catch {
         // Keep fallback videos if instagram feed is unavailable.
@@ -150,6 +209,41 @@ const VideoGrid = () => {
       isMounted = false
     }
   }, [])
+
+  useEffect(() => {
+    setMutedById((current) => {
+      const next = { ...current }
+      for (const video of videos) {
+        if (!(video.id in next)) {
+          next[video.id] = true
+        }
+      }
+      return next
+    })
+  }, [videos])
+
+  useEffect(() => {
+    if (videos.length === 0) return
+    setHoveredCardIndex(null)
+    setPlayingCardIndex(null)
+    playModeRef.current = { index: null, mode: null }
+
+    const frame = window.requestAnimationFrame(() => {
+      syncToCenteredCopy(0, false)
+    })
+    return () => window.cancelAnimationFrame(frame)
+  }, [videos.length])
+
+  useEffect(() => {
+    if (videos.length < 2) return
+    if (isCarouselHovered || playingCardIndex !== null) return
+
+    const timer = window.setInterval(() => {
+      syncToCenteredCopy(activeIndexRef.current + 1, true)
+    }, AUTO_ADVANCE_MS)
+
+    return () => window.clearInterval(timer)
+  }, [isCarouselHovered, playingCardIndex, videos.length])
 
   useEffect(() => {
     const target = gridRef.current
@@ -170,14 +264,14 @@ const VideoGrid = () => {
     return () => observer.disconnect()
   }, [])
 
-  const handleToggle = (index: number) => {
-    const target = videoRefs.current[index]
+  const handleToggle = (renderIndex: number) => {
+    const target = videoRefs.current[renderIndex]
     if (!target) return
 
     if (target.paused) {
-      playModeRef.current = { id: videos[index]?.id ?? null, mode: 'click' }
+      playModeRef.current = { index: renderIndex, mode: 'click' }
       videoRefs.current.forEach((video, videoIndex) => {
-        if (videoIndex !== index) {
+        if (videoIndex !== renderIndex) {
           video?.pause()
         }
       })
@@ -186,24 +280,23 @@ const VideoGrid = () => {
         playPromise.catch(() => undefined)
       }
     } else {
-      const activeId = videos[index]?.id ?? null
-      if (playModeRef.current.mode === 'hover' && playModeRef.current.id === activeId) {
-        playModeRef.current = { id: activeId, mode: 'click' }
-        setPlayingId(activeId)
+      if (playModeRef.current.mode === 'hover' && playModeRef.current.index === renderIndex) {
+        playModeRef.current = { index: renderIndex, mode: 'click' }
+        setPlayingCardIndex(renderIndex)
       } else {
         target.pause()
       }
     }
   }
 
-  const handleHoverPlay = (event: PointerEvent<HTMLDivElement>, index: number) => {
+  const handleHoverPlay = (event: PointerEvent<HTMLDivElement>, renderIndex: number) => {
     if (event.pointerType !== 'mouse') return
-    const target = videoRefs.current[index]
+    const target = videoRefs.current[renderIndex]
     if (!target || !target.paused) return
 
-    playModeRef.current = { id: videos[index]?.id ?? null, mode: 'hover' }
+    playModeRef.current = { index: renderIndex, mode: 'hover' }
     videoRefs.current.forEach((video, videoIndex) => {
-      if (videoIndex !== index) {
+      if (videoIndex !== renderIndex) {
         video?.pause()
       }
     })
@@ -214,12 +307,11 @@ const VideoGrid = () => {
     }
   }
 
-  const handleHoverPause = (event: PointerEvent<HTMLDivElement>, index: number) => {
+  const handleHoverPause = (event: PointerEvent<HTMLDivElement>, renderIndex: number) => {
     if (event.pointerType !== 'mouse') return
-    const target = videoRefs.current[index]
+    const target = videoRefs.current[renderIndex]
     if (!target || target.paused) return
-    const activeId = videos[index]?.id ?? null
-    if (playModeRef.current.mode === 'hover' && playModeRef.current.id === activeId) {
+    if (playModeRef.current.mode === 'hover' && playModeRef.current.index === renderIndex) {
       target.pause()
     }
   }
@@ -238,80 +330,133 @@ const VideoGrid = () => {
     })
   }
 
+  const handleCarouselScroll = () => {
+    if (scrollSettleTimeoutRef.current !== null) {
+      window.clearTimeout(scrollSettleTimeoutRef.current)
+    }
+
+    scrollSettleTimeoutRef.current = window.setTimeout(() => {
+      const container = gridRef.current
+      const baseCount = videos.length
+      if (!container || baseCount === 0) return
+
+      const cards = Array.from(container.children) as HTMLElement[]
+      if (cards.length === 0) return
+
+      const currentLeft = container.scrollLeft
+      let nearestIndex = 0
+      let nearestDistance = Number.POSITIVE_INFINITY
+
+      cards.forEach((card, index) => {
+        const distance = Math.abs(card.offsetLeft - currentLeft)
+        if (distance < nearestDistance) {
+          nearestDistance = distance
+          nearestIndex = index
+        }
+      })
+
+      const logicalIndex = nearestIndex % baseCount
+      setActiveIndex(logicalIndex)
+
+      if (nearestIndex < baseCount || nearestIndex >= baseCount * (LOOP_MULTIPLIER - 1)) {
+        const centeredIndex = baseCount + logicalIndex
+        const centeredCard = cards[centeredIndex]
+        if (centeredCard) {
+          container.scrollTo({
+            left: centeredCard.offsetLeft,
+            behavior: 'auto',
+          })
+        }
+      }
+    }, 120)
+  }
+
+  useEffect(() => {
+    return () => {
+      if (scrollSettleTimeoutRef.current !== null) {
+        window.clearTimeout(scrollSettleTimeoutRef.current)
+      }
+    }
+  }, [])
+
   return (
     <section id="featured-work">
       <p className="featured-works-heading">FEATURED WORKS</p>
       <div
         ref={gridRef}
-        className={`video-grid${playingId ? ' is-expanded' : ''}${isRevealed ? ' is-revealed' : ''}`}
+        className={`video-grid${playingCardIndex !== null ? ' is-expanded' : ''}${isRevealed ? ' is-revealed' : ''}`}
+        onScroll={handleCarouselScroll}
+        onPointerEnter={() => setIsCarouselHovered(true)}
+        onPointerLeave={() => setIsCarouselHovered(false)}
       >
-        {videos.map((video, index) => {
+        {carouselVideos.map((video, renderIndex) => {
+          const logicalIndex = videos.length === 0 ? 0 : renderIndex % videos.length
           const isMuted = mutedById[video.id] ?? true
 
           return (
             <div
-              key={video.id}
-              className={`video-card${playingId === video.id ? ' is-playing' : ''}`}
-              aria-pressed={playingId === video.id}
+              key={`${video.id}-${renderIndex}`}
+              className={`video-card${playingCardIndex === renderIndex ? ' is-playing' : ''}`}
+              aria-pressed={playingCardIndex === renderIndex}
               role="button"
               tabIndex={0}
-              aria-label={`${playingId === video.id ? 'Pause' : 'Play'} ${video.title} video`}
-              onClick={() => handleToggle(index)}
+              aria-label={`${playingCardIndex === renderIndex ? 'Pause' : 'Play'} ${video.title} video`}
+              onClick={() => handleToggle(renderIndex)}
               onKeyDown={(event) => {
                 if (event.key === 'Enter' || event.key === ' ') {
                   event.preventDefault()
-                  handleToggle(index)
+                  handleToggle(renderIndex)
                 }
               }}
               onPointerEnter={(event) => {
-                setHoveredId(video.id)
-                handleHoverPlay(event, index)
+                setHoveredCardIndex(renderIndex)
+                handleHoverPlay(event, renderIndex)
               }}
               onPointerLeave={(event) => {
-                setHoveredId(null)
-                handleHoverPause(event, index)
+                setHoveredCardIndex(null)
+                handleHoverPause(event, renderIndex)
               }}
+              aria-current={activeIndex === logicalIndex ? 'true' : undefined}
             >
               <video
                 ref={(node) => {
-                  videoRefs.current[index] = node
+                  videoRefs.current[renderIndex] = node
                 }}
                 className="video-media"
-                poster={video.poster}
-                preload="metadata"
+                preload="auto"
                 playsInline
                 muted={isMuted}
                 src={video.src}
                 onPlay={() => {
                   if (playModeRef.current.mode === 'click') {
-                    setPlayingId(video.id)
+                    setPlayingCardIndex(renderIndex)
                   }
                 }}
                 onPause={() => {
-                  if (playModeRef.current.id === video.id) {
-                    playModeRef.current = { id: null, mode: null }
+                  if (playModeRef.current.index === renderIndex) {
+                    playModeRef.current = { index: null, mode: null }
                   }
-                  setPlayingId((current) => (current === video.id ? null : current))
+                  setPlayingCardIndex((current) => (current === renderIndex ? null : current))
                 }}
                 onEnded={() => {
-                  if (playModeRef.current.id === video.id) {
-                    playModeRef.current = { id: null, mode: null }
+                  if (playModeRef.current.index === renderIndex) {
+                    playModeRef.current = { index: null, mode: null }
                   }
-                  setPlayingId((current) => (current === video.id ? null : current))
+                  setPlayingCardIndex((current) => (current === renderIndex ? null : current))
                 }}
               />
-              {playingId === video.id ? (
+              {playingCardIndex === renderIndex ? (
                 <button
                   className={`video-audio-toggle${isMuted ? ' is-muted' : ''}`}
                   type="button"
                   aria-pressed={!isMuted}
                   aria-label={isMuted ? ' Mute audio' : 'Turn sound on'}
-                  onClick={(event) => handleAudioToggle(event, index, video.id)}
+                  onClick={(event) => handleAudioToggle(event, renderIndex, video.id)}
                 >
                   <span aria-hidden="true">{isMuted ? 'Sound on' : 'Muted'}</span>
                 </button>
               ) : null}
-              {playingId === video.id ? null : (
+              {playingCardIndex === renderIndex ? null : (
                 <div className="video-overlay">
                   <span className="video-label">{video.tag}</span>
                   <h3>{video.title}</h3>

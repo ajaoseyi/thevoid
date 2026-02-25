@@ -8,32 +8,58 @@
       "tag": "Campaign",
       "title": "Lemonade",
       "poster": "/media/featured-lemonade.mp4",
-      "src": "/media/featured-lemonade.mp4",
-      "permalink": ""
-    },
-    {
-      "id": "void-reel",
-      "tag": "Reel",
-      "title": "VOID Story Cut",
-      "poster": "/media/featured-void-reel.mp4",
-      "src": "/media/featured-void-reel.mp4",
-      "permalink": ""
+      "src": "/media/featured-lemonade.mp4"
     },
     {
       "id": "kaduna-chapter",
       "tag": "Wedding",
       "title": "Kaduna Chapter",
       "poster": "/media/featured-kaduna-chapter.mp4",
-      "src": "/media/featured-kaduna-chapter.mp4",
-      "permalink": ""
+      "src": "/media/featured-kaduna-chapter.mp4"
     },
     {
       "id": "free",
-      "tag": "Reel",
-      "title": "Free",
+      "tag": "Car Sessions",
+      "title": "BMW",
       "poster": "/media/free.mp4",
-      "src": "/media/free.mp4",
-      "permalink": ""
+      "src": "/media/free.mp4"
+    },
+    {
+      "id": "rayjan",
+      "tag": "Fashion House",
+      "title": "Rayjaj",
+      "poster": "/media/featured-void-reel.mp4",
+      "src": "/media/rayjay-void.mp4"
+    },
+    {
+      "id": "picnic-hangout",
+      "tag": "Lifestyle",
+      "title": "Picnic Hangout",
+      "poster": "/media/social-media-mockup.mp4",
+      "src": "/media/video-4.mp4"
+    },
+    {
+      "id": "video-three",
+      "tag": "Food Porn",
+      "title": "Pastries",
+      "poster": "/media/featured-kaduna-chapter.mp4",
+      "src": "/media/video-3.mp4"
+    },
+    {
+      "id": "food-porn",
+      "tag": "Food Porn",
+      "title": "Grills & Vibes",
+      "poster": "/media/featured-lemonade.mp4",
+      "src": "/media/video-2.mp4"
     }
   ]
 }
+
+
+
+
+
+
+
+
+
