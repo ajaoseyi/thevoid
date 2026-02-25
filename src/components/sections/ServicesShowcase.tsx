@@ -38,7 +38,6 @@ const designBrandingImageNames = [
   'thirteen',
 ]
 
-const productCards = ['Printed materials', 'Custom merchandise']
 
 type LightboxImage = { src: string; fallbackSrc: string; alt: string }
 
@@ -61,7 +60,7 @@ const ServicesShowcase = () => {
     fallbackSrc: `/images/design-branding-${imageName}.jpg`,
     alt: `Design and branding ${index + 1}`,
   })
-  const contentLightboxImages = numberWords.map((name, index) =>
+  const contentLightboxImages = numberWords.map((_, index) =>
     getContentImage(index + 1, `Content creation ${index + 1}`),
   )
   const brandingLightboxImages = designBrandingImageNames.map((imageName, index) =>
