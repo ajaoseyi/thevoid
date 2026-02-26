@@ -11,7 +11,7 @@ const normalizePath = (path: string) => {
   return path.replace(/\/+$/, '') || '/'
 }
 
-const introWords = ['the', 'studio', 're imagining', 'your', 'brand']
+const introWords = ['step', 'into', 'the', 'void']
 const INTRO_WORD_STEP_MS = 1600
 const INTRO_WORD_ANIMATION_MS = 1450
 const INTRO_OUTRO_MS = 850

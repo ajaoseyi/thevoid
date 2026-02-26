@@ -51,6 +51,20 @@
       "title": "Grills & Vibes",
       "poster": "/media/featured-lemonade.mp4",
       "src": "/media/video-2.mp4"
+    },
+    {
+      "id": "jaguar",
+      "tag": "Car Sessions",
+      "title": "JAGUAR",
+      "poster": "/media/featured-lemonade.mp4",
+      "src": "/media/video-5.mp4"
+    },
+     {
+      "id": "skating-skating",
+      "tag": "Lifestyle",
+      "title": "Skating, Skating",
+      "poster": "/media/featured-lemonade.mp4",
+      "src": "/media/video-6.mp4"
     }
   ]
 }

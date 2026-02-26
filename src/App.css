@@ -232,6 +232,104 @@
   background: radial-gradient(circle at top, #1f1f1f 0%, #0b0b0b 60%, #050505 100%);
 }
 
+.about-hero {
+  display: grid;
+  grid-template-columns: minmax(0, 1.2fr) minmax(0, 0.8fr);
+  gap: 3rem;
+  align-items: start;
+  padding-top: 5.5rem;
+  padding-bottom: 4.5rem;
+}
+
+.about-hero-copy h1 {
+  margin: 0.6rem 0 1rem;
+  font-size: clamp(2.6rem, 6vw, 5.4rem);
+  line-height: 0.9;
+  letter-spacing: 0.04em;
+  text-transform: uppercase;
+  max-width: 12ch;
+}
+
+.about-hero-copy .lead {
+  max-width: 34rem;
+}
+
+.about-hero-chronicle {
+  border: 1px solid rgba(255, 255, 255, 0.14);
+  border-radius: 1.4rem;
+  padding: 1.5rem;
+  background:
+    radial-gradient(circle at top left, rgba(85, 198, 236, 0.12), transparent 42%),
+    rgba(255, 255, 255, 0.03);
+  backdrop-filter: blur(8px);
+}
+
+.about-hero-chronicle > p {
+  margin: 0 0 1rem;
+  text-transform: uppercase;
+  letter-spacing: 0.2em;
+  font-size: 0.68rem;
+  color: rgba(255, 255, 255, 0.62);
+}
+
+.about-hero-chronicle ol {
+  list-style: none;
+  padding: 0;
+  margin: 0;
+  display: grid;
+  gap: 1rem;
+}
+
+.about-hero-chronicle li {
+  display: grid;
+  grid-template-columns: auto minmax(0, 1fr);
+  gap: 0.8rem;
+  font-size: 0.93rem;
+  color: rgba(255, 255, 255, 0.82);
+}
+
+.about-hero-chronicle li span {
+  width: 2.1rem;
+  height: 2.1rem;
+  border-radius: 999px;
+  border: 1px solid rgba(255, 255, 255, 0.2);
+  display: grid;
+  place-items: center;
+  font-family: var(--font-condensed);
+  letter-spacing: 0.08em;
+  font-size: 0.72rem;
+  color: rgba(255, 255, 255, 0.7);
+}
+
+.about-manifesto {
+  display: grid;
+  grid-template-columns: repeat(3, minmax(0, 1fr));
+  gap: 1.4rem;
+  padding: 0 6vw;
+}
+
+.about-manifesto article {
+  border: 1px solid rgba(255, 255, 255, 0.12);
+  border-radius: 1.25rem;
+  padding: 2rem;
+  background:
+    linear-gradient(150deg, rgba(255, 255, 255, 0.06), rgba(255, 255, 255, 0.015)),
+    #0e1116;
+}
+
+.about-manifesto h3 {
+  margin: 0 0 0.7rem;
+  text-transform: uppercase;
+  letter-spacing: 0.08em;
+  font-family: var(--font-condensed);
+  font-size: 1.2rem;
+}
+
+.about-manifesto p {
+  margin: 0;
+  color: rgba(255, 255, 255, 0.74);
+}
+
 .hero-grid {
   max-width: 50rem;
   align-items: center;
@@ -1990,11 +2088,40 @@
   color: var(--text-secondary);
 }
 
+.about-values {
+  padding-bottom: 2rem;
+}
+
+.about-values .section-head {
+  margin-bottom: 1rem;
+}
+
+.about-values .process-steps {
+  gap: 1.4rem;
+}
+
+.about-values .process-steps > div {
+  border: 1px solid rgba(255, 255, 255, 0.12);
+  border-radius: 1.25rem;
+  padding: 2rem;
+  background: rgba(255, 255, 255, 0.02);
+}
+
+.about-values .process-steps > div span {
+  display: inline-flex;
+  margin-bottom: 1rem;
+  font-family: var(--font-condensed);
+  font-size: 0.74rem;
+  letter-spacing: 0.13em;
+  text-transform: uppercase;
+  color: rgba(255, 255, 255, 0.55);
+}
+
 .about-grid {
   display: grid;
   grid-template-columns: repeat(3, minmax(0, 1fr));
-  gap: 1.5rem;
-  margin-top: 3rem;
+  gap: 2rem;
+  margin-top: 3.6rem;
 }
 
 .about-card {
@@ -2008,7 +2135,7 @@
 .about-page {
   display: flex;
   flex-direction: column;
-  gap: 4rem;
+  gap: 5.5rem;
 }
 
 .metrics {
@@ -2072,6 +2199,26 @@
   gap: 0.6rem;
 }
 
+.footer-social {
+  display: flex;
+  align-items: center;
+  gap: 0.9rem;
+  margin-top: 1rem;
+}
+
+.footer-social a {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  color: var(--text-secondary);
+  transition: color 0.2s ease, transform 0.2s ease;
+}
+
+.footer-social a:hover {
+  color: var(--text-primary);
+  transform: translateY(-1px);
+}
+
 @media (max-width: 1024px) {
   .hero-grid,
   .section-head,
@@ -2080,7 +2227,9 @@
   .process-steps,
   .metrics,
   .footer,
-  .about-grid {
+  .about-grid,
+  .about-manifesto,
+  .about-hero {
     grid-template-columns: 1fr;
   }
 
@@ -2137,6 +2286,20 @@
   .hero-actions {
     flex-direction: column;
     align-items: flex-start;
+  }
+
+  .about-hero {
+    padding-top: 4rem;
+    padding-bottom: 3rem;
+  }
+
+  .about-hero-chronicle {
+    padding: 1.2rem;
+  }
+
+  .about-manifesto article,
+  .about-values .process-steps > div {
+    padding: 1.5rem;
   }
 
   .video-card {

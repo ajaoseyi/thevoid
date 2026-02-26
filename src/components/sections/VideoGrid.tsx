@@ -1,4 +1,6 @@
 import { useEffect, useMemo, useRef, useState, type MouseEvent, type PointerEvent } from 'react'
+import  NextIcon  from '../../assets/icons/next.svg'
+import  PreviousIcon  from '../../assets/icons/previous.svg'
 
 type VideoItem = {
   id: string
@@ -62,6 +64,20 @@ const fallbackVideos: VideoItem[] = [
     poster: '/media/featured-lemonade.mp4',
     src: '/media/video-2.mp4',
   },
+  {
+      "id": "jaguar",
+      "tag": "Car Sessions",
+      "title": "JAGUAR",
+      "poster": "/media/featured-lemonade.mp4",
+      "src": "/media/video-5.mp4"
+    },
+     {
+      "id": "skating-skating",
+      "tag": "Lifestyle",
+      "title": "Skating, Skating",
+      "poster": "/media/featured-lemonade.mp4",
+      "src": "/media/video-6.mp4"
+    }
 ]
 
 const AUTO_ADVANCE_MS = 30_000
@@ -379,93 +395,123 @@ const VideoGrid = () => {
     }
   }, [])
 
+  const handleSlidePrev = () => {
+    syncToCenteredCopy(activeIndexRef.current - 1, true)
+  }
+
+  const handleSlideNext = () => {
+    syncToCenteredCopy(activeIndexRef.current + 1, true)
+  }
+
   return (
     <section id="featured-work">
       <p className="featured-works-heading">FEATURED WORKS</p>
-      <div
-        ref={gridRef}
-        className={`video-grid${playingCardIndex !== null ? ' is-expanded' : ''}${isRevealed ? ' is-revealed' : ''}`}
-        onScroll={handleCarouselScroll}
-        onPointerEnter={() => setIsCarouselHovered(true)}
-        onPointerLeave={() => setIsCarouselHovered(false)}
-      >
-        {carouselVideos.map((video, renderIndex) => {
-          const logicalIndex = videos.length === 0 ? 0 : renderIndex % videos.length
-          const isMuted = mutedById[video.id] ?? true
+      <div className="relative">
+        <button
+          type="button"
+          aria-label="Slide videos left"
+          className="absolute left-8 top-1/2 z-10 -translate-y-1/2  disabled:cursor-not-allowed disabled:opacity-40"
+          onClick={handleSlidePrev}
+          onMouseEnter={handleSlidePrev}
+          disabled={videos.length < 2 || playingCardIndex !== null}
+        >
+          <span aria-hidden="true"><img className='h-12' src={PreviousIcon}/></span>
+        </button>
+        <button
+          type="button"
+          aria-label="Slide videos right"
+          className="absolute right-8 top-1/2 z-10 -translate-y-1/2  text-xl leading-none text-white  transition  disabled:cursor-not-allowed disabled:opacity-40"
+          onClick={handleSlideNext}
+          onMouseEnter={handleSlideNext}
+          disabled={videos.length < 2 || playingCardIndex !== null}
+        >
+          <span aria-hidden="true"><img className='h-14' src={NextIcon}/></span>
+        </button>
+        <div
+          ref={gridRef}
+          className={`video-grid${playingCardIndex !== null ? ' is-expanded' : ''}${isRevealed ? ' is-revealed' : ''}`}
+          onScroll={handleCarouselScroll}
+          onPointerEnter={() => setIsCarouselHovered(true)}
+          onPointerLeave={() => setIsCarouselHovered(false)}
+        >
+          {carouselVideos.map((video, renderIndex) => {
+            const logicalIndex = videos.length === 0 ? 0 : renderIndex % videos.length
+            const isMuted = mutedById[video.id] ?? true
 
-          return (
-            <div
-              key={`${video.id}-${renderIndex}`}
-              className={`video-card${playingCardIndex === renderIndex ? ' is-playing' : ''}`}
-              aria-pressed={playingCardIndex === renderIndex}
-              role="button"
-              tabIndex={0}
-              aria-label={`${playingCardIndex === renderIndex ? 'Pause' : 'Play'} ${video.title} video`}
-              onClick={() => handleToggle(renderIndex)}
-              onKeyDown={(event) => {
-                if (event.key === 'Enter' || event.key === ' ') {
-                  event.preventDefault()
-                  handleToggle(renderIndex)
-                }
-              }}
-              onPointerEnter={(event) => {
-                setHoveredCardIndex(renderIndex)
-                handleHoverPlay(event, renderIndex)
-              }}
-              onPointerLeave={(event) => {
-                setHoveredCardIndex(null)
-                handleHoverPause(event, renderIndex)
-              }}
-              aria-current={activeIndex === logicalIndex ? 'true' : undefined}
-            >
-              <video
-                ref={(node) => {
-                  videoRefs.current[renderIndex] = node
-                }}
-                className="video-media"
-                preload="auto"
-                playsInline
-                muted={isMuted}
-                src={video.src}
-                onPlay={() => {
-                  if (playModeRef.current.mode === 'click') {
-                    setPlayingCardIndex(renderIndex)
+            return (
+              <div
+                key={`${video.id}-${renderIndex}`}
+                className={`video-card${playingCardIndex === renderIndex ? ' is-playing' : ''}`}
+                aria-pressed={playingCardIndex === renderIndex}
+                role="button"
+                tabIndex={0}
+                aria-label={`${playingCardIndex === renderIndex ? 'Pause' : 'Play'} ${video.title} video`}
+                onClick={() => handleToggle(renderIndex)}
+                onKeyDown={(event) => {
+                  if (event.key === 'Enter' || event.key === ' ') {
+                    event.preventDefault()
+                    handleToggle(renderIndex)
                   }
                 }}
-                onPause={() => {
-                  if (playModeRef.current.index === renderIndex) {
-                    playModeRef.current = { index: null, mode: null }
-                  }
-                  setPlayingCardIndex((current) => (current === renderIndex ? null : current))
+                onPointerEnter={(event) => {
+                  setHoveredCardIndex(renderIndex)
+                  handleHoverPlay(event, renderIndex)
                 }}
-                onEnded={() => {
-                  if (playModeRef.current.index === renderIndex) {
-                    playModeRef.current = { index: null, mode: null }
-                  }
-                  setPlayingCardIndex((current) => (current === renderIndex ? null : current))
+                onPointerLeave={(event) => {
+                  setHoveredCardIndex(null)
+                  handleHoverPause(event, renderIndex)
                 }}
-              />
-              {playingCardIndex === renderIndex ? (
-                <button
-                  className={`video-audio-toggle${isMuted ? ' is-muted' : ''}`}
-                  type="button"
-                  aria-pressed={!isMuted}
-                  aria-label={isMuted ? ' Mute audio' : 'Turn sound on'}
-                  onClick={(event) => handleAudioToggle(event, renderIndex, video.id)}
-                >
-                  <span aria-hidden="true">{isMuted ? 'Sound on' : 'Muted'}</span>
-                </button>
-              ) : null}
-              {playingCardIndex === renderIndex ? null : (
-                <div className="video-overlay">
-                  <span className="video-label">{video.tag}</span>
-                  <h3>{video.title}</h3>
-                </div>
-              )}
-              {video.cta && !isInstagramCta(video.cta) ? <span className="video-cta">{video.cta}</span> : null}
-            </div>
-          )
-        })}
+                aria-current={activeIndex === logicalIndex ? 'true' : undefined}
+              >
+                <video
+                  ref={(node) => {
+                    videoRefs.current[renderIndex] = node
+                  }}
+                  className="video-media"
+                  preload="auto"
+                  playsInline
+                  muted={isMuted}
+                  src={video.src}
+                  onPlay={() => {
+                    if (playModeRef.current.mode === 'click') {
+                      setPlayingCardIndex(renderIndex)
+                    }
+                  }}
+                  onPause={() => {
+                    if (playModeRef.current.index === renderIndex) {
+                      playModeRef.current = { index: null, mode: null }
+                    }
+                    setPlayingCardIndex((current) => (current === renderIndex ? null : current))
+                  }}
+                  onEnded={() => {
+                    if (playModeRef.current.index === renderIndex) {
+                      playModeRef.current = { index: null, mode: null }
+                    }
+                    setPlayingCardIndex((current) => (current === renderIndex ? null : current))
+                  }}
+                />
+                {playingCardIndex === renderIndex ? (
+                  <button
+                    className={`video-audio-toggle${isMuted ? ' is-muted' : ''}`}
+                    type="button"
+                    aria-pressed={!isMuted}
+                    aria-label={isMuted ? ' Mute audio' : 'Turn sound on'}
+                    onClick={(event) => handleAudioToggle(event, renderIndex, video.id)}
+                  >
+                    <span aria-hidden="true">{isMuted ? 'Sound on' : 'Muted'}</span>
+                  </button>
+                ) : null}
+                {playingCardIndex === renderIndex ? null : (
+                  <div className="video-overlay">
+                    <span className="video-label">{video.tag}</span>
+                    <h3>{video.title}</h3>
+                  </div>
+                )}
+                {video.cta && !isInstagramCta(video.cta) ? <span className="video-cta">{video.cta}</span> : null}
+              </div>
+            )
+          })}
+        </div>
       </div>
     </section>
   )
