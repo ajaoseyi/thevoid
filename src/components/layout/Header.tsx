@@ -31,9 +31,9 @@ const Header = ({ onNavigate }: HeaderProps) => {
             Contact
           </a>
         </div>
-        <button className="cta" type="button" onClick={() => onNavigate('/#contact')}>
+        {/* <button className="cta" type="button" onClick={() => onNavigate('/#contact')}>
           Get in touch
-        </button>
+        </button> */}
       </nav>
     </header>
   )
