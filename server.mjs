@@ -21,7 +21,7 @@ if (isProd) {
   })
   app.use(vite.middlewares)
 
-  app.use('*', async (req, res) => {
+  app.use(async (req, res) => {
     try {
       const url = req.originalUrl
       let template = await fs.readFile('./index.html', 'utf-8')
@@ -38,7 +38,7 @@ if (isProd) {
 }
 
 if (isProd) {
-  app.use('*', async (req, res) => {
+  app.use(async (req, res) => {
     const appHtml = prodRender(req.originalUrl)
     const html = prodTemplate.replace('<div id="root"></div>', `<div id="root">${appHtml}</div>`)
     res.status(200).set({ 'Content-Type': 'text/html' }).end(html)
@@ -48,4 +48,3 @@ if (isProd) {
 app.listen(port, () => {
   console.log(`SSR server running at http://localhost:${port}`)
 })
-
