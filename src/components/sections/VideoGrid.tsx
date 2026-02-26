@@ -1,4 +1,4 @@
-import { useEffect, useMemo, useRef, useState, type MouseEvent, type PointerEvent } from 'react'
+import { useEffect, useMemo, useRef, useState, type MouseEvent, type PointerEvent, type TouchEvent } from 'react'
 import  NextIcon  from '../../assets/icons/next.svg'
 import  PreviousIcon  from '../../assets/icons/previous.svg'
 
@@ -131,9 +131,11 @@ const VideoGrid = () => {
   const videoRefs = useRef<Array<HTMLVideoElement | null>>([])
   const gridRef = useRef<HTMLDivElement | null>(null)
   const [isRevealed, setIsRevealed] = useState(false)
+  const [isFullscreenActive, setIsFullscreenActive] = useState(false)
   const activeIndexRef = useRef(0)
   const scrollSettleTimeoutRef = useRef<number | null>(null)
   const primedVideosRef = useRef(new WeakSet<HTMLVideoElement>())
+  const swipeStartRef = useRef<{ x: number; y: number } | null>(null)
   const [shouldPrimeOnMobile] = useState(() =>
     window.matchMedia('(hover: none), (pointer: coarse)').matches,
   )
@@ -256,14 +258,23 @@ const VideoGrid = () => {
 
   useEffect(() => {
     if (videos.length < 2) return
-    if (isCarouselHovered || playingCardIndex !== null) return
+    if (isCarouselHovered || playingCardIndex !== null || isFullscreenActive) return
 
     const timer = window.setInterval(() => {
       syncToCenteredCopy(activeIndexRef.current + 1, true)
     }, AUTO_ADVANCE_MS)
 
     return () => window.clearInterval(timer)
-  }, [isCarouselHovered, playingCardIndex, videos.length])
+  }, [isCarouselHovered, isFullscreenActive, playingCardIndex, videos.length])
+
+  useEffect(() => {
+    const onFullscreenChange = () => {
+      setIsFullscreenActive(document.fullscreenElement !== null)
+    }
+
+    document.addEventListener('fullscreenchange', onFullscreenChange)
+    return () => document.removeEventListener('fullscreenchange', onFullscreenChange)
+  }, [])
 
   useEffect(() => {
     const target = gridRef.current
@@ -497,6 +508,31 @@ const VideoGrid = () => {
     syncToCenteredCopy(activeIndexRef.current + 1, true)
   }
 
+  const handleTouchStart = (event: TouchEvent<HTMLElement>) => {
+    const touch = event.touches[0]
+    if (!touch) return
+    swipeStartRef.current = { x: touch.clientX, y: touch.clientY }
+  }
+
+  const handleTouchEnd = (event: TouchEvent<HTMLElement>) => {
+    const start = swipeStartRef.current
+    swipeStartRef.current = null
+    const touch = event.changedTouches[0]
+    if (!start || !touch) return
+
+    const dx = touch.clientX - start.x
+    const dy = touch.clientY - start.y
+    const absDx = Math.abs(dx)
+    const absDy = Math.abs(dy)
+    if (absDx < 40 || absDx <= absDy) return
+
+    if (dx < 0) {
+      handleSlideNext()
+    } else {
+      handleSlidePrev()
+    }
+  }
+
   return (
     <section id="featured-work">
       <p className="featured-works-heading">FEATURED WORKS</p>
@@ -504,7 +540,7 @@ const VideoGrid = () => {
         <button
           type="button"
           aria-label="Slide videos left"
-          className="absolute left-8 top-1/2 z-10 -translate-y-1/2  disabled:cursor-not-allowed disabled:opacity-40"
+          className="absolute left-8 top-1/2 z-10 hidden -translate-y-1/2 disabled:cursor-not-allowed disabled:opacity-40 md:block"
           onClick={handleSlidePrev}
           onMouseEnter={handleSlidePrev}
           disabled={videos.length < 2}
@@ -514,7 +550,7 @@ const VideoGrid = () => {
         <button
           type="button"
           aria-label="Slide videos right"
-          className="absolute right-8 top-1/2 z-10 -translate-y-1/2  text-xl leading-none text-white  transition  disabled:cursor-not-allowed disabled:opacity-40"
+          className="absolute right-8 top-1/2 z-10 hidden -translate-y-1/2 text-xl leading-none text-white transition disabled:cursor-not-allowed disabled:opacity-40 md:block"
           onClick={handleSlideNext}
           onMouseEnter={handleSlideNext}
           disabled={videos.length < 2}
@@ -555,6 +591,8 @@ const VideoGrid = () => {
                   setHoveredCardIndex(null)
                   handleHoverPause(event, renderIndex)
                 }}
+                onTouchStart={handleTouchStart}
+                onTouchEnd={handleTouchEnd}
                 aria-current={activeIndex === logicalIndex ? 'true' : undefined}
               >
                 <video
@@ -567,6 +605,8 @@ const VideoGrid = () => {
                   playsInline
                   muted={isMuted}
                   src={video.src}
+                  onTouchStart={handleTouchStart}
+                  onTouchEnd={handleTouchEnd}
                   onLoadedData={(event) => {
                     primeFirstFrameOnMobile(event.currentTarget)
                   }}
