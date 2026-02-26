@@ -134,11 +134,7 @@ const VideoGrid = () => {
   const [isFullscreenActive, setIsFullscreenActive] = useState(false)
   const activeIndexRef = useRef(0)
   const scrollSettleTimeoutRef = useRef<number | null>(null)
-  const primedVideosRef = useRef(new WeakSet<HTMLVideoElement>())
   const swipeStartRef = useRef<{ x: number; y: number } | null>(null)
-  const [shouldPrimeOnMobile] = useState(() =>
-    window.matchMedia('(hover: none), (pointer: coarse)').matches,
-  )
   const playModeRef = useRef<{ index: number | null; mode: 'hover' | 'click' | null }>({
     index: null,
     mode: null,
@@ -443,38 +439,6 @@ const VideoGrid = () => {
     syncToCenteredCopy(activeIndexRef.current - 1, true)
   }
 
-  const primeFirstFrameOnMobile = (target: HTMLVideoElement) => {
-    if (!shouldPrimeOnMobile) return
-    if (primedVideosRef.current.has(target)) return
-    primedVideosRef.current.add(target)
-
-    const pauseAfterPrime = () => {
-      if (document.fullscreenElement === target) return
-      target.pause()
-      if (target.currentTime < 0.04) {
-        try {
-          target.currentTime = 0.04
-        } catch {
-          // Ignore seek failures from incomplete buffering.
-        }
-      }
-    }
-
-    const playPromise = target.play()
-    if (playPromise) {
-      playPromise
-        .then(() => {
-          window.setTimeout(pauseAfterPrime, 60)
-        })
-        .catch(() => {
-          pauseAfterPrime()
-        })
-      return
-    }
-
-    pauseAfterPrime()
-  }
-
   const handleSlideNext = () => {
     if (playingCardIndex !== null && videos.length > 1) {
       const baseCount = videos.length
@@ -600,16 +564,12 @@ const VideoGrid = () => {
                     videoRefs.current[renderIndex] = node
                   }}
                   className="video-media"
-                  poster={video.poster}
                   preload="auto"
                   playsInline
                   muted={isMuted}
                   src={video.src}
                   onTouchStart={handleTouchStart}
                   onTouchEnd={handleTouchEnd}
-                  onLoadedData={(event) => {
-                    primeFirstFrameOnMobile(event.currentTarget)
-                  }}
                   onPlay={() => {
                     if (playModeRef.current.mode === 'click') {
                       setPlayingCardIndex(renderIndex)
