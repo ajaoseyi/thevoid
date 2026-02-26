@@ -1,5 +1,5 @@
 import type { MouseEvent } from 'react'
-import { Instagram, MusicPlay, Sms, Youtube } from 'iconsax-reactjs'
+import { Instagram, Sms, Youtube } from 'iconsax-reactjs'
 
 type FooterProps = {
   onNavigate: (to: string) => void
