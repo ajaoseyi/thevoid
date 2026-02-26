@@ -133,6 +133,10 @@ const VideoGrid = () => {
   const [isRevealed, setIsRevealed] = useState(false)
   const activeIndexRef = useRef(0)
   const scrollSettleTimeoutRef = useRef<number | null>(null)
+  const primedVideosRef = useRef(new WeakSet<HTMLVideoElement>())
+  const [shouldPrimeOnMobile] = useState(() =>
+    window.matchMedia('(hover: none), (pointer: coarse)').matches,
+  )
   const playModeRef = useRef<{ index: number | null; mode: 'hover' | 'click' | null }>({
     index: null,
     mode: null,
@@ -396,10 +400,100 @@ const VideoGrid = () => {
   }, [])
 
   const handleSlidePrev = () => {
+    if (playingCardIndex !== null && videos.length > 1) {
+      const baseCount = videos.length
+      const currentRenderIndex = playingCardIndex
+      const currentLogicalIndex = ((currentRenderIndex % baseCount) + baseCount) % baseCount
+      const nextLogicalIndex = (currentLogicalIndex - 1 + baseCount) % baseCount
+      const nextRenderIndex = baseCount + nextLogicalIndex
+      const currentVideo = videoRefs.current[currentRenderIndex]
+      const nextVideo = videoRefs.current[nextRenderIndex]
+      const shouldPreserveFullscreen = document.fullscreenElement === currentVideo
+
+      syncToCenteredCopy(nextLogicalIndex, true)
+
+      if (currentVideo && !currentVideo.paused) {
+        currentVideo.pause()
+      }
+
+      if (nextVideo) {
+        playModeRef.current = { index: nextRenderIndex, mode: 'click' }
+        const playPromise = nextVideo.play()
+        if (playPromise) {
+          playPromise.catch(() => undefined)
+        }
+        if (shouldPreserveFullscreen && nextVideo.requestFullscreen) {
+          void nextVideo.requestFullscreen().catch(() => undefined)
+        }
+      }
+      return
+    }
+
     syncToCenteredCopy(activeIndexRef.current - 1, true)
   }
 
+  const primeFirstFrameOnMobile = (target: HTMLVideoElement) => {
+    if (!shouldPrimeOnMobile) return
+    if (primedVideosRef.current.has(target)) return
+    primedVideosRef.current.add(target)
+
+    const pauseAfterPrime = () => {
+      if (document.fullscreenElement === target) return
+      target.pause()
+      if (target.currentTime < 0.04) {
+        try {
+          target.currentTime = 0.04
+        } catch {
+          // Ignore seek failures from incomplete buffering.
+        }
+      }
+    }
+
+    const playPromise = target.play()
+    if (playPromise) {
+      playPromise
+        .then(() => {
+          window.setTimeout(pauseAfterPrime, 60)
+        })
+        .catch(() => {
+          pauseAfterPrime()
+        })
+      return
+    }
+
+    pauseAfterPrime()
+  }
+
   const handleSlideNext = () => {
+    if (playingCardIndex !== null && videos.length > 1) {
+      const baseCount = videos.length
+      const currentRenderIndex = playingCardIndex
+      const currentLogicalIndex = ((currentRenderIndex % baseCount) + baseCount) % baseCount
+      const nextLogicalIndex = (currentLogicalIndex + 1) % baseCount
+      const nextRenderIndex = baseCount + nextLogicalIndex
+      const currentVideo = videoRefs.current[currentRenderIndex]
+      const nextVideo = videoRefs.current[nextRenderIndex]
+      const shouldPreserveFullscreen = document.fullscreenElement === currentVideo
+
+      syncToCenteredCopy(nextLogicalIndex, true)
+
+      if (currentVideo && !currentVideo.paused) {
+        currentVideo.pause()
+      }
+
+      if (nextVideo) {
+        playModeRef.current = { index: nextRenderIndex, mode: 'click' }
+        const playPromise = nextVideo.play()
+        if (playPromise) {
+          playPromise.catch(() => undefined)
+        }
+        if (shouldPreserveFullscreen && nextVideo.requestFullscreen) {
+          void nextVideo.requestFullscreen().catch(() => undefined)
+        }
+      }
+      return
+    }
+
     syncToCenteredCopy(activeIndexRef.current + 1, true)
   }
 
@@ -413,7 +507,7 @@ const VideoGrid = () => {
           className="absolute left-8 top-1/2 z-10 -translate-y-1/2  disabled:cursor-not-allowed disabled:opacity-40"
           onClick={handleSlidePrev}
           onMouseEnter={handleSlidePrev}
-          disabled={videos.length < 2 || playingCardIndex !== null}
+          disabled={videos.length < 2}
         >
           <span aria-hidden="true"><img className='h-12' src={PreviousIcon}/></span>
         </button>
@@ -423,7 +517,7 @@ const VideoGrid = () => {
           className="absolute right-8 top-1/2 z-10 -translate-y-1/2  text-xl leading-none text-white  transition  disabled:cursor-not-allowed disabled:opacity-40"
           onClick={handleSlideNext}
           onMouseEnter={handleSlideNext}
-          disabled={videos.length < 2 || playingCardIndex !== null}
+          disabled={videos.length < 2}
         >
           <span aria-hidden="true"><img className='h-14' src={NextIcon}/></span>
         </button>
@@ -468,10 +562,14 @@ const VideoGrid = () => {
                     videoRefs.current[renderIndex] = node
                   }}
                   className="video-media"
+                  poster={video.poster}
                   preload="auto"
                   playsInline
                   muted={isMuted}
                   src={video.src}
+                  onLoadedData={(event) => {
+                    primeFirstFrameOnMobile(event.currentTarget)
+                  }}
                   onPlay={() => {
                     if (playModeRef.current.mode === 'click') {
                       setPlayingCardIndex(renderIndex)
@@ -498,7 +596,7 @@ const VideoGrid = () => {
                     aria-label={isMuted ? ' Mute audio' : 'Turn sound on'}
                     onClick={(event) => handleAudioToggle(event, renderIndex, video.id)}
                   >
-                    <span aria-hidden="true">{isMuted ? 'Sound on' : 'Muted'}</span>
+                    <span aria-hidden="true">{!isMuted ? 'Sound on' : 'Muted'}</span>
                   </button>
                 ) : null}
                 {playingCardIndex === renderIndex ? null : (
