@@ -1,10 +1,13 @@
 import { useEffect, useMemo, useState, type CSSProperties } from 'react'
+import { Navigate, Route, Routes, useLocation } from 'react-router-dom'
 import './App.css'
 import Header from './components/layout/Header'
 import Footer from './components/layout/Footer'
 import Home from './pages/Home'
 import Services from './pages/Services'
 import About from './pages/About'
+import { resolveAssetUrl } from './utils/assets'
+import { getSiteBaseUrl, usePageSeo, type SeoConfig } from './utils/seo'
 
 const normalizePath = (path: string) => {
   if (!path || path === '/') return '/'
@@ -72,12 +75,76 @@ const preloadVideoMetadata = (src: string) =>
     video.load()
   })
 
+const siteBaseUrl = getSiteBaseUrl()
+
+const getSeoConfigForPath = (path: string): SeoConfig => {
+  const commonOrganization = {
+    '@context': 'https://schema.org',
+    '@type': 'Organization',
+    name: 'The Void',
+    url: siteBaseUrl,
+  }
+
+  switch (path) {
+    case '/services':
+      return {
+        logo:'',
+        title: 'Services | The Void Media Group',
+        description:
+          'Creatiive media agency that specializes in video production, social media systems, creative consulting, and brand design built for modern brands and teams.',
+        path: '/services',
+        imagePath: resolveAssetUrl('/images/design-branding-2.jpg'),
+        jsonLd: {
+          ...commonOrganization,
+          makesOffer: {
+            '@type': 'OfferCatalog',
+            name: 'Video and Creative Services',
+          },
+        },
+      }
+    case '/about':
+      return {
+        title: 'About | The Void',
+        logo: '',
+        description:
+          'Meet The Void, a global collective of creators and technologists building story-first video systems for brands.',
+        path: '/about',
+        imagePath: resolveAssetUrl('/images/content-creation-4.jpg'),
+        jsonLd: {
+          ...commonOrganization,
+          description: 'Global collective of directors, producers, and technologists.',
+        },
+      }
+    default:
+      return {
+        title: 'The Void | Creative Digital Studio',
+        description:
+          'The Void is a bold creative digital studio crafting websites, brands, and digital experiences that stand out. Lets build something unforgettable.we build story-first video systems, social channels much more ',
+        path: '/',
+        logo: '',
+        imagePath: resolveAssetUrl('/images/content-creation-1.jpg'),
+        jsonLd: [
+          commonOrganization,
+          {
+            '@context': 'https://schema.org',
+            '@type': 'WebSite',
+            name: 'The Void',
+            url: siteBaseUrl,
+          },
+        ],
+      }
+  }
+}
+
 function App() {
-  const [path, setPath] = useState(() => normalizePath(window.location.pathname))
+  const location = useLocation()
   const [isIntroVisible, setIsIntroVisible] = useState(true)
   const [isIntroLeaving, setIsIntroLeaving] = useState(false)
   const [isIntroSequenceComplete, setIsIntroSequenceComplete] = useState(false)
-  const [isBootReady, setIsBootReady] = useState(false)
+  const path = normalizePath(location.pathname)
+  const seoConfig = useMemo(() => getSeoConfigForPath(path), [path])
+
+  usePageSeo(seoConfig)
 
   useEffect(() => {
     const reducedMotion = window.matchMedia('(prefers-reduced-motion: reduce)').matches
@@ -101,13 +168,11 @@ function App() {
   }, [])
 
   useEffect(() => {
-    let isMounted = true
-
     const preloadBootAssets = async () => {
       const preloadTasks: Promise<unknown>[] = [
         fetch('/data/featured-videos.json').catch(() => undefined),
-        ...introPreloadImages.map((src) => preloadImage(src)),
-        ...introPreloadVideos.map((src) => preloadVideoMetadata(src)),
+        ...introPreloadImages.map((src) => preloadImage(resolveAssetUrl(src))),
+        ...introPreloadVideos.map((src) => preloadVideoMetadata(resolveAssetUrl(src))),
       ]
 
       const timeoutTask = new Promise<void>((resolve) => {
@@ -115,22 +180,15 @@ function App() {
       })
 
       await Promise.race([Promise.allSettled(preloadTasks), timeoutTask])
-
-      if (isMounted) {
-        setIsBootReady(true)
-      }
     }
 
     void preloadBootAssets()
-    return () => {
-      isMounted = false
-    }
   }, [])
 
   useEffect(() => {
-    if (!isIntroSequenceComplete || !isBootReady) return
+    if (!isIntroSequenceComplete) return
     setIsIntroVisible(false)
-  }, [isBootReady, isIntroSequenceComplete])
+  }, [isIntroSequenceComplete])
 
   useEffect(() => {
     const cursor = document.querySelector('.custom-cursor') as HTMLDivElement | null
@@ -169,63 +227,31 @@ function App() {
     }
   }, [])
 
-
-
-
-
   useEffect(() => {
-    const handlePopState = () => {
-      setPath(normalizePath(window.location.pathname))
-    }
+    const reducedMotion = window.matchMedia('(prefers-reduced-motion: reduce)').matches
 
-    window.addEventListener('popstate', handlePopState)
-    return () => window.removeEventListener('popstate', handlePopState)
-  }, [])
-
-  const navigate = useMemo(
-    () =>
-      (to: string) => {
-        const reducedMotion = window.matchMedia('(prefers-reduced-motion: reduce)').matches
-        const url = new URL(to, window.location.origin)
-        const nextPath = normalizePath(url.pathname)
-        window.history.pushState({}, '', `${url.pathname}${url.search}${url.hash}`)
-        setPath(nextPath)
-
-        if (url.hash) {
-          requestAnimationFrame(() => {
-            requestAnimationFrame(() => {
-              const target = document.querySelector(url.hash)
-              if (!target) return
-
-              const top = window.scrollY + target.getBoundingClientRect().top
-              if (reducedMotion) {
-                window.scrollTo(0, top)
-                return
-              }
-              animateWindowScroll(top)
-            })
-          })
-        } else {
+    if (location.hash) {
+      requestAnimationFrame(() => {
+        requestAnimationFrame(() => {
+          const target = document.querySelector(location.hash)
+          if (!target) return
+          const top = window.scrollY + target.getBoundingClientRect().top
           if (reducedMotion) {
-            window.scrollTo(0, 0)
+            window.scrollTo(0, top)
             return
           }
-          animateWindowScroll(0)
-        }
-      },
-    [],
-  )
-
-  const page = (() => {
-    switch (path) {
-      case '/services':
-        return <Services onNavigate={navigate} />
-      case '/about':
-        return <About />
-      default:
-        return <Home />
+          animateWindowScroll(top)
+        })
+      })
+      return
     }
-  })()
+
+    if (reducedMotion) {
+      window.scrollTo(0, 0)
+      return
+    }
+    animateWindowScroll(0)
+  }, [location.hash, location.pathname])
 
   return (
     <div className="page">
@@ -245,11 +271,19 @@ function App() {
         </div>
       ) : null}
       <div className="custom-cursor" data-mode="default" data-action="" aria-hidden="true" />
-      <Header onNavigate={navigate} />
-      <main className="page-content">{page}</main>
-      <Footer onNavigate={navigate} />
+      <Header />
+      <main className="page-content">
+        <Routes>
+          <Route path="/" element={<Home />} />
+          <Route path="/services" element={<Services />} />
+          <Route path="/about" element={<About />} />
+          <Route path="*" element={<Navigate to="/" replace />} />
+        </Routes>
+      </main>
+      <Footer />
     </div>
   )
 }
 
 export default App
+

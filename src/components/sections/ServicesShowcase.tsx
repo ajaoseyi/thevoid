@@ -1,4 +1,5 @@
 import { useEffect, useState } from 'react'
+import { resolveAssetUrl } from '../../utils/assets'
 
 const contentCards = [
   { title: 'Brand campaigns', imageNumber: 1 },
@@ -51,13 +52,13 @@ const ServicesShowcase = () => {
   const brandingPreviewItems = designBrandingImageNames.slice(0, 4)
   const contentPreviewItems = contentCards.slice(0, 4)
   const getContentImage = (imageNumber: number, title: string): LightboxImage => ({
-    src: `/images/content-creation-${imageNumber}.jpg`,
-    fallbackSrc: `/images/content-creation-${numberWords[imageNumber - 1]}.jpg`,
+    src: resolveAssetUrl(`/images/content-creation-${imageNumber}.jpg`),
+    fallbackSrc: resolveAssetUrl(`/images/content-creation-${numberWords[imageNumber - 1]}.jpg`),
     alt: title,
   })
   const getDesignBrandingImage = (index: number, imageName: string): LightboxImage => ({
-    src: `/images/design-branding-${index + 1}.jpg`,
-    fallbackSrc: `/images/design-branding-${imageName}.jpg`,
+    src: resolveAssetUrl(`/images/design-branding-${index + 1}.jpg`),
+    fallbackSrc: resolveAssetUrl(`/images/design-branding-${imageName}.jpg`),
     alt: `Design and branding ${index + 1}`,
   })
   const contentLightboxImages = numberWords.map((_, index) =>
@@ -171,7 +172,7 @@ const ServicesShowcase = () => {
             >
               <img
                 className="content-card-image"
-                src={`/images/content-creation-${card.imageNumber}.jpg`}
+                src={resolveAssetUrl(`/images/content-creation-${card.imageNumber}.jpg`)}
                 alt={card.title}
                 loading="lazy"
                 onError={(event) => {
@@ -195,7 +196,7 @@ const ServicesShowcase = () => {
           <div className="social-phone">
             <video
               className="social-phone-video"
-              src="/media/social-media-mockup.mp4"
+              src={resolveAssetUrl('/media/social-media-mockup.mp4')}
               autoPlay
               loop
               muted
@@ -276,7 +277,7 @@ const ServicesShowcase = () => {
             >
               <img
                 className="branding-tile-image"
-                src={`/images/design-branding-${index + 1}.jpg`}
+                src={resolveAssetUrl(`/images/design-branding-${index + 1}.jpg`)}
                 alt={`Design and branding ${index + 1}`}
                 loading="lazy"
                 onError={(event) => {
@@ -356,7 +357,7 @@ const ServicesShowcase = () => {
                   <img
                     alt={`Content creation ${index + 1}`}
                     className="content-gallery-image"
-                    src={`/images/content-creation-${index + 1}.jpg`}
+                    src={resolveAssetUrl(`/images/content-creation-${index + 1}.jpg`)}
                     loading="lazy"
                     onError={(event) => {
                       const target = event.currentTarget
@@ -405,7 +406,7 @@ const ServicesShowcase = () => {
                   <img
                     alt={`Design and branding ${index + 1}`}
                     className="branding-gallery-image"
-                    src={`/images/design-branding-${index + 1}.jpg`}
+                    src={resolveAssetUrl(`/images/design-branding-${index + 1}.jpg`)}
                     loading="lazy"
                     onError={(event) => {
                       const target = event.currentTarget

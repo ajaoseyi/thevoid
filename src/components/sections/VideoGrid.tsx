@@ -1,6 +1,7 @@
 import { useEffect, useMemo, useRef, useState, type MouseEvent, type PointerEvent, type TouchEvent } from 'react'
 import  NextIcon  from '../../assets/icons/next.svg'
 import  PreviousIcon  from '../../assets/icons/previous.svg'
+import { resolveAssetUrl } from '../../utils/assets'
 
 type VideoItem = {
   id: string
@@ -17,66 +18,66 @@ const fallbackVideos: VideoItem[] = [
     id: 'lemonade',
     tag: 'Campaign',
     title: 'Lemonade',
-    poster: '/media/featured-lemonade.mp4',
-    src: '/media/featured-lemonade.mp4',
+    poster: resolveAssetUrl('/media/featured-lemonade.mp4'),
+    src: resolveAssetUrl('/media/featured-lemonade.mp4'),
   },
   {
     id: 'kaduna-chapter',
     tag: 'Wedding',
     title: 'Kaduna Chapter',
-    poster: '/media/featured-kaduna-chapter.mp4',
-    src: '/media/featured-kaduna-chapter.mp4',
+    poster: resolveAssetUrl('/media/featured-kaduna-chapter.mp4'),
+    src: resolveAssetUrl('/media/featured-kaduna-chapter.mp4'),
   },
   {
     id: 'free',
     tag: 'Car Sessions ',
     title: 'BMW',
-    poster: '/media/free.mp4',
-    src: '/media/free.mp4',
+    poster: resolveAssetUrl('/media/free.mp4'),
+    src: resolveAssetUrl('/media/free.mp4'),
   },
 
   {
     id: 'rayjan',
     tag: 'Fashion House',
     title: 'Rayjaj',
-    poster: '/media/featured-void-reel.mp4',
-    src: '/media/rayjay-void.mp4',
+    poster: resolveAssetUrl('/media/featured-void-reel.mp4'),
+    src: resolveAssetUrl('/media/rayjay-void.mp4'),
   },
   {
     id: 'picnic-hangout',
     tag: 'Lifestyle',
     title: 'Picnic Hangout',
-    poster: '/media/social-media-mockup.mp4',
-    src: '/media/video-4.mp4',
+    poster: resolveAssetUrl('/media/social-media-mockup.mp4'),
+    src: resolveAssetUrl('/media/video-4.mp4'),
   },
   {
     id: 'video-three',
     tag: 'Food Porn',
     title: 'Pastries',
-    poster: '/media/featured-kaduna-chapter.mp4',
-    src: '/media/video-3.mp4',
+    poster: resolveAssetUrl('/media/featured-kaduna-chapter.mp4'),
+    src: resolveAssetUrl('/media/video-3.mp4'),
   },
 
   {
     id: 'food-porn',
     tag: 'Food Porn',
     title: 'Grills & Vibes',
-    poster: '/media/featured-lemonade.mp4',
-    src: '/media/video-2.mp4',
+    poster: resolveAssetUrl('/media/featured-lemonade.mp4'),
+    src: resolveAssetUrl('/media/video-2.mp4'),
   },
   {
       "id": "jaguar",
       "tag": "Car Sessions",
       "title": "JAGUAR",
-      "poster": "/media/featured-lemonade.mp4",
-      "src": "/media/video-5.mp4"
+      "poster": resolveAssetUrl('/media/featured-lemonade.mp4'),
+      "src": resolveAssetUrl('/media/video-5.mp4')
     },
      {
       "id": "skating-skating",
       "tag": "Lifestyle",
       "title": "Skating, Skating",
-      "poster": "/media/featured-lemonade.mp4",
-      "src": "/media/video-6.mp4"
+      "poster": resolveAssetUrl('/media/featured-lemonade.mp4'),
+      "src": resolveAssetUrl('/media/video-6.mp4')
     }
 ]
 
@@ -88,8 +89,8 @@ const normalizeVideoItem = (value: unknown): VideoItem | null => {
 
   const item = value as Record<string, unknown>
   const id = typeof item.id === 'string' ? item.id.trim() : ''
-  const src = typeof item.src === 'string' ? item.src.trim() : ''
-  const poster = typeof item.poster === 'string' ? item.poster.trim() : src
+  const src = typeof item.src === 'string' ? resolveAssetUrl(item.src.trim()) : ''
+  const poster = typeof item.poster === 'string' ? resolveAssetUrl(item.poster.trim()) : src
   const title =
     typeof item.title === 'string' && item.title.trim().length > 0
       ? item.title.trim()
@@ -564,9 +565,10 @@ const VideoGrid = () => {
                     videoRefs.current[renderIndex] = node
                   }}
                   className="video-media"
-                  preload="auto"
+                  preload="metadata"
                   playsInline
                   muted={isMuted}
+                  poster={video.poster}
                   src={video.src}
                   onTouchStart={handleTouchStart}
                   onTouchEnd={handleTouchEnd}

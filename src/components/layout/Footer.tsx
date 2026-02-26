@@ -1,21 +1,13 @@
-import type { MouseEvent } from 'react'
 import { Instagram, Sms, Youtube } from 'iconsax-reactjs'
+import { Link } from 'react-router-dom'
 
-type FooterProps = {
-  onNavigate: (to: string) => void
-}
-
-const Footer = ({ onNavigate }: FooterProps) => {
-  const handleNavigate = (event: MouseEvent<HTMLAnchorElement>, to: string) => {
-    event.preventDefault()
-    onNavigate(to)
-  }
+const Footer = () => {
 
   return (
     <footer className="footer text-lg mt-12">
       <div>
         <h3>The Void</h3>
-        <p>Lagos · Abuja · London</p>
+        <p>Lagos · Abuja · Australia</p>
         <div className="flex gap-3 items-center my-3" aria-label="Social media">
           <a href="https://www.instagram.com/thevoidmg?igsh=MWpyMzM2ZDZmdmY2NQ==" target="_blank" rel="noreferrer" aria-label="Instagram">
             <Instagram size={32} variant="Linear" />
@@ -29,18 +21,10 @@ const Footer = ({ onNavigate }: FooterProps) => {
         </div>
       </div>
       <div className="footer-links">
-        <a href="/#featured-work" onClick={(event) => handleNavigate(event, '/#featured-work')}>
-          Work
-        </a>
-        <a href="/#mission" onClick={(event) => handleNavigate(event, '/#mission')}>
-          Services
-        </a>
-        <a href="/about" onClick={(event) => handleNavigate(event, '/about')}>
-          About
-        </a>
-        <a href="/#contact" onClick={(event) => handleNavigate(event, '/#contact')}>
-          Contact
-        </a>
+        <Link to="/#featured-work">Work</Link>
+        <Link to="/#mission">Services</Link>
+        <Link to="/about">About</Link>
+        <Link to="/#contact">Contact</Link>
       </div>
       <div className="footer-links">
         <a href="mailto:hello@myriad.video">hello@myriad.video</a>

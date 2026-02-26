@@ -1,37 +1,20 @@
-import type { MouseEvent } from 'react'
+import { Link } from 'react-router-dom'
 
-type HeaderProps = {
-  onNavigate: (to: string) => void
-}
-
-const Header = ({ onNavigate }: HeaderProps) => {
-  const handleNavigate = (event: MouseEvent<HTMLAnchorElement>, to: string) => {
-    event.preventDefault()
-    onNavigate(to)
-  }
-
+const Header = () => {
   return (
     <header className="site-header">
       <nav className="nav">
-        <a className="brand" href="/" onClick={(event) => handleNavigate(event, '/')}>
+        <Link className="brand" to="/">
           <span className="brand-mark" />
           <span className="brand-name">The Void</span>
-        </a>
+        </Link>
         <div className="nav-links">
-          <a href="/#featured-work" onClick={(event) => handleNavigate(event, '/#featured-work')}>
-            Work
-          </a>
-          <a href="/#mission" onClick={(event) => handleNavigate(event, '/#mission')}>
-            Services
-          </a>
-          <a href="/about" onClick={(event) => handleNavigate(event, '/about')}>
-            About
-          </a>
-          <a href="/#contact" onClick={(event) => handleNavigate(event, '/#contact')}>
-            Contact
-          </a>
+          <Link to="/#featured-work">Work</Link>
+          <Link to="/#mission">Services</Link>
+          <Link to="/about">About</Link>
+          <Link to="/#contact">Contact</Link>
         </div>
-        {/* <button className="cta" type="button" onClick={() => onNavigate('/#contact')}>
+        {/* <button className="cta" type="button">
           Get in touch
         </button> */}
       </nav>

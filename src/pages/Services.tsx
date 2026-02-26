@@ -1,8 +1,8 @@
-type ServicesProps = {
-  onNavigate: (to: string) => void
-}
+import { useNavigate } from 'react-router-dom'
 
-const Services = ({ onNavigate }: ServicesProps) => {
+const Services = () => {
+  const navigate = useNavigate()
+
   return (
     <div className="services-page">
       <section className="page-hero">
@@ -12,7 +12,7 @@ const Services = ({ onNavigate }: ServicesProps) => {
           From brand strategy to multi-format production, we build modular systems that
           keep stories consistent across every channel.
         </p>
-        <button className="cta primary" type="button" onClick={() => onNavigate('/#contact')}>
+        <button className="cta primary" type="button" onClick={() => navigate('/#contact')}>
           Start a project
         </button>
       </section>
@@ -61,7 +61,7 @@ const Services = ({ onNavigate }: ServicesProps) => {
             scales with your team.
           </p>
         </div>
-        <button className="cta primary" type="button" onClick={() => onNavigate('/#contact')}>
+        <button className="cta primary" type="button" onClick={() => navigate('/#contact')}>
           Contact us
         </button>
       </section>
