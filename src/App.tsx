@@ -16,6 +16,22 @@ const INTRO_WORD_STEP_MS = 1600
 const INTRO_WORD_ANIMATION_MS = 1450
 const INTRO_OUTRO_MS = 850
 const SCROLL_DURATION_MS = 820
+const BOOT_PRELOAD_TIMEOUT_MS = 2600
+
+const introPreloadImages = [
+  '/images/content-creation-1.jpg',
+  '/images/content-creation-3.jpg',
+  '/images/content-creation-4.jpg',
+  '/images/design-branding-1.jpg',
+  '/images/design-branding-2.jpg',
+  '/images/design-branding-3.jpg',
+]
+
+const introPreloadVideos = [
+  '/media/featured-lemonade.mp4',
+  '/media/featured-kaduna-chapter.mp4',
+  '/media/free.mp4',
+]
 
 const easeInOutCubic = (t: number) => (t < 0.5 ? 4 * t * t * t : 1 - Math.pow(-2 * t + 2, 3) / 2)
 
@@ -38,10 +54,30 @@ const animateWindowScroll = (targetTop: number, durationMs = SCROLL_DURATION_MS)
   window.requestAnimationFrame(tick)
 }
 
+const preloadImage = (src: string) =>
+  new Promise<void>((resolve) => {
+    const image = new Image()
+    image.onload = () => resolve()
+    image.onerror = () => resolve()
+    image.src = src
+  })
+
+const preloadVideoMetadata = (src: string) =>
+  new Promise<void>((resolve) => {
+    const video = document.createElement('video')
+    video.preload = 'metadata'
+    video.onloadedmetadata = () => resolve()
+    video.onerror = () => resolve()
+    video.src = src
+    video.load()
+  })
+
 function App() {
   const [path, setPath] = useState(() => normalizePath(window.location.pathname))
   const [isIntroVisible, setIsIntroVisible] = useState(true)
   const [isIntroLeaving, setIsIntroLeaving] = useState(false)
+  const [isIntroSequenceComplete, setIsIntroSequenceComplete] = useState(false)
+  const [isBootReady, setIsBootReady] = useState(false)
 
   useEffect(() => {
     const reducedMotion = window.matchMedia('(prefers-reduced-motion: reduce)').matches
@@ -54,27 +90,83 @@ function App() {
       setIsIntroLeaving(true)
     }, leaveAt)
 
-    const hideTimer = window.setTimeout(() => {
-      setIsIntroVisible(false)
+    const introDoneTimer = window.setTimeout(() => {
+      setIsIntroSequenceComplete(true)
     }, totalDuration)
 
     return () => {
       window.clearTimeout(leaveTimer)
-      window.clearTimeout(hideTimer)
+      window.clearTimeout(introDoneTimer)
     }
   }, [])
+
+  useEffect(() => {
+    let isMounted = true
+
+    const preloadBootAssets = async () => {
+      const preloadTasks: Promise<unknown>[] = [
+        fetch('/data/featured-videos.json').catch(() => undefined),
+        ...introPreloadImages.map((src) => preloadImage(src)),
+        ...introPreloadVideos.map((src) => preloadVideoMetadata(src)),
+      ]
+
+      const timeoutTask = new Promise<void>((resolve) => {
+        window.setTimeout(resolve, BOOT_PRELOAD_TIMEOUT_MS)
+      })
+
+      await Promise.race([Promise.allSettled(preloadTasks), timeoutTask])
+
+      if (isMounted) {
+        setIsBootReady(true)
+      }
+    }
+
+    void preloadBootAssets()
+    return () => {
+      isMounted = false
+    }
+  }, [])
+
+  useEffect(() => {
+    if (!isIntroSequenceComplete || !isBootReady) return
+    setIsIntroVisible(false)
+  }, [isBootReady, isIntroSequenceComplete])
 
   useEffect(() => {
     const cursor = document.querySelector('.custom-cursor') as HTMLDivElement | null
     if (!cursor) return
 
-    const handleMove = (event: MouseEvent) => {
-      cursor.style.left = `${event.clientX}px`
-      cursor.style.top = `${event.clientY}px`
+    const moveCursor = (clientX: number, clientY: number) => {
+      cursor.style.left = `${clientX}px`
+      cursor.style.top = `${clientY}px`
     }
 
-    window.addEventListener('mousemove', handleMove)
-    return () => window.removeEventListener('mousemove', handleMove)
+    const handlePointerMove = (event: PointerEvent) => {
+      moveCursor(event.clientX, event.clientY)
+    }
+
+    const handleTouchMove = (event: TouchEvent) => {
+      const touch = event.touches[0]
+      if (!touch) return
+      moveCursor(touch.clientX, touch.clientY)
+    }
+
+    const handleTouchStart = (event: TouchEvent) => {
+      const touch = event.touches[0]
+      if (!touch) return
+      moveCursor(touch.clientX, touch.clientY)
+    }
+
+    window.addEventListener('pointermove', handlePointerMove)
+    window.addEventListener('pointerdown', handlePointerMove)
+    window.addEventListener('touchstart', handleTouchStart, { passive: true })
+    window.addEventListener('touchmove', handleTouchMove, { passive: true })
+    return () => {
+      window.removeEventListener('pointermove', handlePointerMove)
+      window.removeEventListener('pointerdown', handlePointerMove)
+      window.removeEventListener('touchstart', handleTouchStart)
+      window.removeEventListener('touchmove', handleTouchMove)
+    }
   }, [])
 
 

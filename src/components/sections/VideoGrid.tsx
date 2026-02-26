@@ -192,7 +192,7 @@ const VideoGrid = () => {
 
     const loadFeaturedVideos = async () => {
       try {
-        const response = await fetch('/data/featured-videos.json', { cache: 'no-store' })
+        const response = await fetch('/data/featured-videos.json', { cache: 'force-cache' })
         if (!response.ok) return
 
         const payload = (await response.json()) as unknown
