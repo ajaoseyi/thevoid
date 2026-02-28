@@ -88,3 +88,14 @@ Configure keys in your environment (see `.env.example`):
 - `META_GRAPH_VERSION`: Graph API version (default `v22.0`)
 
 The script writes collected videos to `public/data/featured-videos.json`, and the UI auto-loads this file in the Featured Works section.
+
+## Deploying To Vercel
+
+This project is configured for SSR deployment on Vercel:
+
+- Build command: `npm run build`
+- Runtime entry: `api/index.mjs` (serverless function)
+- SSR renderer: `dist/server/entry-server.js`
+- Static assets served from: `dist/client`
+
+The deployment routing and bundled SSR assets are configured in `vercel.json`.

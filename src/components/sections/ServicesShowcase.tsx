@@ -1,4 +1,4 @@
-import { useEffect, useState } from 'react'
+import { useEffect, useState, type MouseEvent } from 'react'
 import { resolveAssetUrl } from '../../utils/assets'
 import {
   getContentCreationImageByName,
@@ -192,6 +192,15 @@ const ServicesShowcase = () => {
     }
   }, [activeImage, activeImageState, isBrandingGalleryOpen, isContentGalleryOpen])
 
+  const closeOnBackdropClick = (
+    event: MouseEvent<HTMLDivElement>,
+    onClose: () => void,
+  ) => {
+    if (event.target === event.currentTarget) {
+      onClose()
+    }
+  }
+
   return (
     <section className="services-showcase" id="mission">
       <div className="expertise-intro">
@@ -262,7 +271,7 @@ const ServicesShowcase = () => {
           <h3>
             Social Media
             <br />
-            Managemented
+            Management
           </h3>
           <div className="social-platforms" aria-hidden="true">
             <span>IG</span>
@@ -375,7 +384,7 @@ const ServicesShowcase = () => {
         <div
           aria-label="Content creation examples"
           className="content-gallery-modal"
-          onClick={() => setIsContentGalleryOpen(false)}
+          onClick={(event) => closeOnBackdropClick(event, () => setIsContentGalleryOpen(false))}
           role="dialog"
         >
           <div className="content-gallery-panel" onClick={(event) => event.stopPropagation()}>
@@ -416,7 +425,7 @@ const ServicesShowcase = () => {
         <div
           aria-label="Design and branding examples"
           className="branding-gallery-modal"
-          onClick={() => setIsBrandingGalleryOpen(false)}
+          onClick={(event) => closeOnBackdropClick(event, () => setIsBrandingGalleryOpen(false))}
           role="dialog"
         >
           <div className="branding-gallery-panel" onClick={(event) => event.stopPropagation()}>
@@ -457,7 +466,7 @@ const ServicesShowcase = () => {
         <div
           aria-label="Content image preview"
           className="content-lightbox"
-          onClick={() => setActiveImageState(null)}
+          onClick={(event) => closeOnBackdropClick(event, () => setActiveImageState(null))}
           role="dialog"
         >
           <button
