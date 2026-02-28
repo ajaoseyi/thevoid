@@ -1,12 +1,19 @@
 {
   "version": 2,
   "buildCommand": "npm run build",
+  "outputDirectory": "dist/client",
   "functions": {
     "api/index.mjs": {
-      "includeFiles": "dist/**"
+      "includeFiles": [
+        "dist/server/**",
+        "dist/client/index.html"
+      ]
     }
   },
   "routes": [
+    {
+      "handle": "filesystem"
+    },
     {
       "src": "/(.*)",
       "dest": "/api/index.mjs"

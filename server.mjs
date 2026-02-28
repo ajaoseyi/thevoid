@@ -2,7 +2,6 @@ import fs from 'node:fs/promises'
 import path from 'node:path'
 import { fileURLToPath, pathToFileURL } from 'node:url'
 import express from 'express'
-import { createServer as createViteServer } from 'vite'
 
 const rootDir = path.dirname(fileURLToPath(import.meta.url))
 const distClientDir = path.join(rootDir, 'dist', 'client')
@@ -30,6 +29,7 @@ export async function createApp({ isProd = isProdFromEnv } = {}) {
     return app
   }
 
+  const { createServer: createViteServer } = await import('vite')
   const vite = await createViteServer({
     server: { middlewareMode: true },
     appType: 'custom',
