@@ -7,6 +7,10 @@ import Home from './pages/Home'
 import Services from './pages/Services'
 import About from './pages/About'
 import { resolveAssetUrl } from './utils/assets'
+import {
+  getContentCreationImageByNumber,
+  getDesignBrandingImageByNumber,
+} from './utils/cloudinaryImages'
 import { getSiteBaseUrl, usePageSeo, type SeoConfig } from './utils/seo'
 
 const normalizePath = (path: string) => {
@@ -22,18 +26,26 @@ const SCROLL_DURATION_MS = 820
 const BOOT_PRELOAD_TIMEOUT_MS = 2600
 
 const introPreloadImages = [
-  '/images/content-creation-1.jpg',
-  '/images/content-creation-3.jpg',
-  '/images/content-creation-4.jpg',
-  '/images/design-branding-1.jpg',
-  '/images/design-branding-2.jpg',
-  '/images/design-branding-3.jpg',
+  getContentCreationImageByNumber(1),
+  getContentCreationImageByNumber(3),
+  getContentCreationImageByNumber(4),
+  getDesignBrandingImageByNumber(1),
+  getDesignBrandingImageByNumber(2),
+  getDesignBrandingImageByNumber(3),
 ]
 
 const introPreloadVideos = [
   '/media/featured-lemonade.mp4',
   '/media/featured-kaduna-chapter.mp4',
   '/media/free.mp4',
+  '/media/featured-void-reel.mp4',
+  '/media/rayjay-void.mp4',
+  '/media/social-media-mockup.mp4',
+  '/media/video-2.mp4',
+  '/media/video-3.mp4',
+  '/media/video-4.mp4',
+  '/media/video-5.mp4',
+  '/media/video-6.mp4',
 ]
 
 const easeInOutCubic = (t: number) => (t < 0.5 ? 4 * t * t * t : 1 - Math.pow(-2 * t + 2, 3) / 2)
@@ -65,12 +77,46 @@ const preloadImage = (src: string) =>
     image.src = src
   })
 
-const preloadVideoMetadata = (src: string) =>
+const INTRO_PREVIEW_SEEK_SECONDS = 2
+
+const preloadVideoFrame = (src: string) =>
   new Promise<void>((resolve) => {
     const video = document.createElement('video')
-    video.preload = 'metadata'
-    video.onloadedmetadata = () => resolve()
-    video.onerror = () => resolve()
+    video.preload = 'auto'
+    video.muted = true
+    video.playsInline = true
+
+    const done = () => {
+      video.onloadedmetadata = null
+      video.onloadeddata = null
+      video.onseeked = null
+      video.onerror = null
+      video.pause()
+      resolve()
+    }
+
+    video.onloadedmetadata = () => {
+      const duration = Number.isFinite(video.duration) ? video.duration : NaN
+      const targetTime =
+        Number.isFinite(duration) && duration > 0
+          ? Math.min(INTRO_PREVIEW_SEEK_SECONDS, Math.max(duration - 0.05, 0))
+          : INTRO_PREVIEW_SEEK_SECONDS
+      const seekAndResolve = () => {
+        video.onseeked = () => done()
+        try {
+          video.currentTime = targetTime
+        } catch {
+          done()
+        }
+      }
+
+      if (video.readyState >= 2) {
+        seekAndResolve()
+      } else {
+        video.onloadeddata = () => seekAndResolve()
+      }
+    }
+    video.onerror = () => done()
     video.src = src
     video.load()
   })
@@ -93,7 +139,7 @@ const getSeoConfigForPath = (path: string): SeoConfig => {
         description:
           'Creatiive media agency that specializes in video production, social media systems, creative consulting, and brand design built for modern brands and teams.',
         path: '/services',
-        imagePath: resolveAssetUrl('/images/design-branding-2.jpg'),
+        imagePath: getDesignBrandingImageByNumber(2),
         jsonLd: {
           ...commonOrganization,
           makesOffer: {
@@ -109,7 +155,7 @@ const getSeoConfigForPath = (path: string): SeoConfig => {
         description:
           'Meet The Void, a global collective of creators and technologists building story-first video systems for brands.',
         path: '/about',
-        imagePath: resolveAssetUrl('/images/content-creation-4.jpg'),
+        imagePath: getContentCreationImageByNumber(4),
         jsonLd: {
           ...commonOrganization,
           description: 'Global collective of directors, producers, and technologists.',
@@ -122,7 +168,7 @@ const getSeoConfigForPath = (path: string): SeoConfig => {
           'The Void is a bold creative digital studio crafting websites, brands, and digital experiences that stand out. Lets build something unforgettable.we build story-first video systems, social channels much more ',
         path: '/',
         logo: '',
-        imagePath: resolveAssetUrl('/images/content-creation-1.jpg'),
+        imagePath: getContentCreationImageByNumber(1),
         jsonLd: [
           commonOrganization,
           {
@@ -172,7 +218,7 @@ function App() {
       const preloadTasks: Promise<unknown>[] = [
         fetch('/data/featured-videos.json').catch(() => undefined),
         ...introPreloadImages.map((src) => preloadImage(resolveAssetUrl(src))),
-        ...introPreloadVideos.map((src) => preloadVideoMetadata(resolveAssetUrl(src))),
+        ...introPreloadVideos.map((src) => preloadVideoFrame(resolveAssetUrl(src))),
       ]
 
       const timeoutTask = new Promise<void>((resolve) => {
@@ -286,4 +332,3 @@ function App() {
 }
 
 export default App
-

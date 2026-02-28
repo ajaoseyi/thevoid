@@ -1,5 +1,11 @@
 import { useEffect, useState } from 'react'
 import { resolveAssetUrl } from '../../utils/assets'
+import {
+  getContentCreationImageByName,
+  getContentCreationImageByNumber,
+  getDesignBrandingImageByName,
+  getDesignBrandingImageByNumber,
+} from '../../utils/cloudinaryImages'
 
 const contentCards = [
   { title: 'Brand campaigns', imageNumber: 1 },
@@ -42,6 +48,60 @@ const designBrandingImageNames = [
 
 type LightboxImage = { src: string; fallbackSrc: string; alt: string }
 
+type CdnImageProps = {
+  src: string
+  fallbackSrc?: string
+  alt: string
+  className: string
+  frameClassName?: string
+  loading?: 'lazy' | 'eager'
+}
+
+const CdnImage = ({
+  src,
+  fallbackSrc,
+  alt,
+  className,
+  frameClassName,
+  loading = 'lazy',
+}: CdnImageProps) => {
+  const [currentSrc, setCurrentSrc] = useState(src)
+  const [isLoaded, setIsLoaded] = useState(false)
+  const [fallbackApplied, setFallbackApplied] = useState(false)
+
+  useEffect(() => {
+    setCurrentSrc(src)
+    setIsLoaded(false)
+    setFallbackApplied(false)
+  }, [src])
+
+  const handleError = () => {
+    if (!fallbackApplied && fallbackSrc && fallbackSrc !== currentSrc) {
+      setFallbackApplied(true)
+      setCurrentSrc(fallbackSrc)
+      return
+    }
+    setIsLoaded(true)
+  }
+
+  return (
+    <div className={`cdn-image-frame ${frameClassName ?? ''} ${isLoaded ? 'is-loaded' : ''}`}>
+      <img
+        alt={alt}
+        className={`${className} cdn-image`}
+        src={currentSrc}
+        loading={loading}
+        decoding="async"
+        onLoad={() => setIsLoaded(true)}
+        onError={handleError}
+      />
+      {!isLoaded ? (
+        <span className="cdn-image-loader" aria-hidden="true" />
+      ) : null}
+    </div>
+  )
+}
+
 const ServicesShowcase = () => {
   const [isContentGalleryOpen, setIsContentGalleryOpen] = useState(false)
   const [isBrandingGalleryOpen, setIsBrandingGalleryOpen] = useState(false)
@@ -52,13 +112,13 @@ const ServicesShowcase = () => {
   const brandingPreviewItems = designBrandingImageNames.slice(0, 4)
   const contentPreviewItems = contentCards.slice(0, 4)
   const getContentImage = (imageNumber: number, title: string): LightboxImage => ({
-    src: resolveAssetUrl(`/images/content-creation-${imageNumber}.jpg`),
-    fallbackSrc: resolveAssetUrl(`/images/content-creation-${numberWords[imageNumber - 1]}.jpg`),
+    src: getContentCreationImageByNumber(imageNumber),
+    fallbackSrc: getContentCreationImageByName(numberWords[imageNumber - 1] ?? ''),
     alt: title,
   })
   const getDesignBrandingImage = (index: number, imageName: string): LightboxImage => ({
-    src: resolveAssetUrl(`/images/design-branding-${index + 1}.jpg`),
-    fallbackSrc: resolveAssetUrl(`/images/design-branding-${imageName}.jpg`),
+    src: getDesignBrandingImageByNumber(index + 1),
+    fallbackSrc: getDesignBrandingImageByName(imageName),
     alt: `Design and branding ${index + 1}`,
   })
   const contentLightboxImages = numberWords.map((_, index) =>
@@ -170,20 +230,12 @@ const ServicesShowcase = () => {
               type="button"
               onClick={() => openLightboxAtIndex(contentLightboxImages, card.imageNumber - 1)}
             >
-              <img
+              <CdnImage
                 className="content-card-image"
-                src={resolveAssetUrl(`/images/content-creation-${card.imageNumber}.jpg`)}
+                frameClassName="content-card-image-frame"
+                src={getContentCreationImageByNumber(card.imageNumber)}
+                fallbackSrc={getContentImage(card.imageNumber, card.title).fallbackSrc}
                 alt={card.title}
-                loading="lazy"
-                onError={(event) => {
-                  const target = event.currentTarget
-                  const fallbackSrc = getContentImage(card.imageNumber, card.title).fallbackSrc
-                  if (target.dataset.fallbackApplied === 'true') {
-                    return
-                  }
-                  target.dataset.fallbackApplied = 'true'
-                  target.src = fallbackSrc
-                }}
               />
               <div className="content-card-overlay">{card.title}</div>
             </button>
@@ -210,7 +262,7 @@ const ServicesShowcase = () => {
           <h3>
             Social Media
             <br />
-            Management
+            Managemented
           </h3>
           <div className="social-platforms" aria-hidden="true">
             <span>IG</span>
@@ -275,20 +327,12 @@ const ServicesShowcase = () => {
               type="button"
               onClick={() => openLightboxAtIndex(brandingLightboxImages, index)}
             >
-              <img
+              <CdnImage
                 className="branding-tile-image"
-                src={resolveAssetUrl(`/images/design-branding-${index + 1}.jpg`)}
+                frameClassName="branding-tile-image-frame"
+                src={getDesignBrandingImageByNumber(index + 1)}
+                fallbackSrc={getDesignBrandingImage(index, imageName).fallbackSrc}
                 alt={`Design and branding ${index + 1}`}
-                loading="lazy"
-                onError={(event) => {
-                  const target = event.currentTarget
-                  const fallbackSrc = getDesignBrandingImage(index, imageName).fallbackSrc
-                  if (target.dataset.fallbackApplied === 'true') {
-                    return
-                  }
-                  target.dataset.fallbackApplied = 'true'
-                  target.src = fallbackSrc
-                }}
               />
             </button>
           ))}
@@ -354,20 +398,12 @@ const ServicesShowcase = () => {
                   onClick={() => openLightboxAtIndex(contentLightboxImages, index)}
                   type="button"
                 >
-                  <img
+                  <CdnImage
                     alt={`Content creation ${index + 1}`}
                     className="content-gallery-image"
-                    src={resolveAssetUrl(`/images/content-creation-${index + 1}.jpg`)}
-                    loading="lazy"
-                    onError={(event) => {
-                      const target = event.currentTarget
-                      const fallbackSrc = getContentImage(index + 1, `Content creation ${index + 1}`).fallbackSrc
-                      if (target.dataset.fallbackApplied === 'true') {
-                        return
-                      }
-                      target.dataset.fallbackApplied = 'true'
-                      target.src = fallbackSrc
-                    }}
+                    frameClassName="content-gallery-image-frame"
+                    src={getContentCreationImageByNumber(index + 1)}
+                    fallbackSrc={getContentImage(index + 1, `Content creation ${index + 1}`).fallbackSrc}
                   />
                 </button>
               ))}
@@ -403,20 +439,12 @@ const ServicesShowcase = () => {
                   onClick={() => openLightboxAtIndex(brandingLightboxImages, index)}
                   type="button"
                 >
-                  <img
+                  <CdnImage
                     alt={`Design and branding ${index + 1}`}
                     className="branding-gallery-image"
-                    src={resolveAssetUrl(`/images/design-branding-${index + 1}.jpg`)}
-                    loading="lazy"
-                    onError={(event) => {
-                      const target = event.currentTarget
-                      const fallbackSrc = getDesignBrandingImage(index, imageName).fallbackSrc
-                      if (target.dataset.fallbackApplied === 'true') {
-                        return
-                      }
-                      target.dataset.fallbackApplied = 'true'
-                      target.src = fallbackSrc
-                    }}
+                    frameClassName="branding-gallery-image-frame"
+                    src={getDesignBrandingImageByNumber(index + 1)}
+                    fallbackSrc={getDesignBrandingImage(index, imageName).fallbackSrc}
                   />
                 </button>
               ))}
@@ -463,19 +491,14 @@ const ServicesShowcase = () => {
             >
               <span aria-hidden="true">&gt;</span>
             </button>
-            <img
+            <CdnImage
               key={activeImage.src}
               alt={activeImage.alt}
               className="content-lightbox-image"
+              frameClassName="content-lightbox-image-frame"
               src={activeImage.src}
-              onError={(event) => {
-                const target = event.currentTarget
-                if (target.dataset.fallbackApplied === 'true') {
-                  return
-                }
-                target.dataset.fallbackApplied = 'true'
-                target.src = activeImage.fallbackSrc
-              }}
+              fallbackSrc={activeImage.fallbackSrc}
+              loading="eager"
             />
           </div>
         </div>

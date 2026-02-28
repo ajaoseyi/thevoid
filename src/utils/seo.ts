@@ -1,4 +1,5 @@
 import { useEffect } from 'react'
+import { getDesignBrandingImageByNumber } from './cloudinaryImages'
 
 type JsonLdValue = Record<string, unknown> | Array<Record<string, unknown>>
 
@@ -62,7 +63,14 @@ const setJsonLd = (jsonLd?: JsonLdValue) => {
   }
 }
 
-export const usePageSeo = ({ title, description, path, imagePath = '/images/design-branding-1.jpg', type = 'Website', jsonLd }: SeoConfig) => {
+export const usePageSeo = ({
+  title,
+  description,
+  path,
+  imagePath = getDesignBrandingImageByNumber(1),
+  type = 'Website',
+  jsonLd,
+}: SeoConfig) => {
   useEffect(() => {
     const canonicalUrl = toAbsoluteUrl(path)
     const imageUrl = toAbsoluteUrl(imagePath)
@@ -88,4 +96,3 @@ export const usePageSeo = ({ title, description, path, imagePath = '/images/desi
 }
 
 export const getSiteBaseUrl = () => siteBaseUrl
-

@@ -83,6 +83,7 @@ const fallbackVideos: VideoItem[] = [
 
 const AUTO_ADVANCE_MS = 30_000
 const LOOP_MULTIPLIER = 3
+const PREVIEW_SEEK_SECONDS = 2
 
 const normalizeVideoItem = (value: unknown): VideoItem | null => {
   if (!value || typeof value !== 'object') return null
@@ -119,6 +120,8 @@ const normalizeVideoItem = (value: unknown): VideoItem | null => {
 }
 
 const isInstagramCta = (cta?: string) => (cta ?? '').trim().toLowerCase() === 'from instagram'
+const isImageAsset = (src?: string) =>
+  Boolean(src && /\.(avif|webp|png|jpe?g|gif|bmp|svg)(?:[?#].*)?$/i.test(src))
 
 const VideoGrid = () => {
   const [videos, setVideos] = useState<VideoItem[]>(fallbackVideos)
@@ -473,6 +476,19 @@ const VideoGrid = () => {
     syncToCenteredCopy(activeIndexRef.current + 1, true)
   }
 
+  const handleSwipeGesture = (dx: number, dy: number) => {
+    const absDx = Math.abs(dx)
+    const absDy = Math.abs(dy)
+    if (absDx < 40 || absDx <= absDy) return false
+
+    if (dx < 0) {
+      handleSlideNext()
+    } else {
+      handleSlidePrev()
+    }
+    return true
+  }
+
   const handleTouchStart = (event: TouchEvent<HTMLElement>) => {
     const touch = event.touches[0]
     if (!touch) return
@@ -484,19 +500,43 @@ const VideoGrid = () => {
     swipeStartRef.current = null
     const touch = event.changedTouches[0]
     if (!start || !touch) return
-
-    const dx = touch.clientX - start.x
-    const dy = touch.clientY - start.y
-    const absDx = Math.abs(dx)
-    const absDy = Math.abs(dy)
-    if (absDx < 40 || absDx <= absDy) return
-
-    if (dx < 0) {
-      handleSlideNext()
-    } else {
-      handleSlidePrev()
-    }
+    handleSwipeGesture(touch.clientX - start.x, touch.clientY - start.y)
   }
+
+  useEffect(() => {
+    if (!isFullscreenActive || videos.length < 2) return
+
+    const fullscreenTarget = document.fullscreenElement
+    if (!fullscreenTarget) return
+
+    const onTouchStart = (event: Event) => {
+      const touchEvent = event as globalThis.TouchEvent
+      const touch = touchEvent.touches[0]
+      if (!touch) return
+      swipeStartRef.current = { x: touch.clientX, y: touch.clientY }
+    }
+
+    const onTouchEnd = (event: Event) => {
+      const touchEvent = event as globalThis.TouchEvent
+      const start = swipeStartRef.current
+      swipeStartRef.current = null
+      const touch = touchEvent.changedTouches[0]
+      if (!start || !touch) return
+
+      const didSwipe = handleSwipeGesture(touch.clientX - start.x, touch.clientY - start.y)
+      if (didSwipe) {
+        touchEvent.preventDefault()
+      }
+    }
+
+    fullscreenTarget.addEventListener('touchstart', onTouchStart, { passive: true })
+    fullscreenTarget.addEventListener('touchend', onTouchEnd, { passive: false })
+
+    return () => {
+      fullscreenTarget.removeEventListener('touchstart', onTouchStart)
+      fullscreenTarget.removeEventListener('touchend', onTouchEnd)
+    }
+  }, [isFullscreenActive, videos.length, playingCardIndex])
 
   return (
     <section id="featured-work">
@@ -524,7 +564,7 @@ const VideoGrid = () => {
         </button>
         <div
           ref={gridRef}
-          className={`video-grid${playingCardIndex !== null ? ' is-expanded' : ''}${isRevealed ? ' is-revealed' : ''}`}
+          className={`video-grid ${playingCardIndex !== null ? ' is-expanded' : ''}${isRevealed ? ' is-revealed' : ''}`}
           onScroll={handleCarouselScroll}
           onPointerEnter={() => setIsCarouselHovered(true)}
           onPointerLeave={() => setIsCarouselHovered(false)}
@@ -565,13 +605,22 @@ const VideoGrid = () => {
                     videoRefs.current[renderIndex] = node
                   }}
                   className="video-media"
-                  preload="metadata"
+                  preload="auto"
                   playsInline
                   muted={isMuted}
-                  poster={video.poster}
+                  poster={isImageAsset(video.poster) ? video.poster : undefined}
                   src={video.src}
                   onTouchStart={handleTouchStart}
                   onTouchEnd={handleTouchEnd}
+                  onLoadedData={(event) => {
+                    const media = event.currentTarget
+                    if (!media.paused || media.currentTime >= PREVIEW_SEEK_SECONDS) return
+                    try {
+                      media.currentTime = PREVIEW_SEEK_SECONDS
+                    } catch {
+                      // Ignore seek failures while data is still buffering.
+                    }
+                  }}
                   onPlay={() => {
                     if (playModeRef.current.mode === 'click') {
                       setPlayingCardIndex(renderIndex)

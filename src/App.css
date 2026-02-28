@@ -657,6 +657,57 @@
   transition: transform 0.5s ease;
 }
 
+.cdn-image-frame {
+  position: relative;
+  overflow: hidden;
+  background: linear-gradient(135deg, rgba(255, 255, 255, 0.04), rgba(255, 255, 255, 0.01));
+}
+
+.cdn-image {
+  opacity: 0;
+  transition: opacity 0.28s ease;
+}
+
+.cdn-image-frame.is-loaded .cdn-image {
+  opacity: 1;
+}
+
+.cdn-image-loader {
+  position: absolute;
+  inset: 0;
+  display: grid;
+  place-items: center;
+  background: rgba(7, 9, 13, 0.72);
+  overflow: hidden;
+}
+
+.cdn-image-loader::before {
+  content: '';
+  position: absolute;
+  inset: 0;
+  background:
+    linear-gradient(
+      100deg,
+      rgba(255, 255, 255, 0.02) 20%,
+      rgba(255, 255, 255, 0.16) 42%,
+      rgba(255, 255, 255, 0.03) 64%
+    );
+  transform: translateX(-120%);
+  animation: cdnShimmer 1.2s ease-in-out infinite;
+}
+
+@keyframes cdnShimmer {
+  to {
+    transform: translateX(120%);
+  }
+}
+
+.content-card-image-frame,
+.branding-tile-image-frame {
+  width: 100%;
+  height: 100%;
+}
+
 .content-card:hover .content-card-image,
 .content-card:focus-visible .content-card-image {
   transform: scale(1.05);
@@ -871,6 +922,12 @@
   aspect-ratio: 4 / 5;
   object-fit: cover;
   display: block;
+}
+
+.content-gallery-image-frame,
+.branding-gallery-image-frame {
+  width: 100%;
+  aspect-ratio: 4 / 5;
 }
 
 .shade-1 {
@@ -1422,6 +1479,15 @@
   display: block;
 }
 
+.content-lightbox-image-frame {
+  max-width: min(94vw, 1200px);
+  max-height: 86vh;
+  min-width: min(60vw, 680px);
+  min-height: min(48vh, 460px);
+  display: grid;
+  place-items: center;
+}
+
 .web-head {
   text-align: center;
   margin-bottom: 1.8rem;
@@ -1836,7 +1902,7 @@
 
 .video-grid {
   display: flex;
-  gap: 0;
+  gap: 4px;
   margin-top: 3rem;
   overflow-x: auto;
   overscroll-behavior-x: contain;
@@ -1876,7 +1942,7 @@
 
 .video-card {
   position: relative;
-  flex: 0 0 25%;
+  flex: 0 0 23%;
   scroll-snap-align: start;
   scroll-snap-stop: always;
   border: none;
