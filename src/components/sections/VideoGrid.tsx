@@ -18,66 +18,66 @@ const fallbackVideos: VideoItem[] = [
     id: 'lemonade',
     tag: 'Campaign',
     title: 'Lemonade',
-    poster: resolveAssetUrl('/media/featured-lemonade.mp4'),
-    src: resolveAssetUrl('/media/featured-lemonade.mp4'),
+    poster: resolveAssetUrl('https://res.cloudinary.com/dcoza82oi/video/upload/v1772301159/featured-lemonade_ond3sq.mp4'),
+    src: resolveAssetUrl('https://res.cloudinary.com/dcoza82oi/video/upload/v1772301159/featured-lemonade_ond3sq.mp4'),
   },
   {
     id: 'kaduna-chapter',
     tag: 'Wedding',
     title: 'Kaduna Chapter',
-    poster: resolveAssetUrl('/media/featured-kaduna-chapter.mp4'),
-    src: resolveAssetUrl('/media/featured-kaduna-chapter.mp4'),
+    poster: resolveAssetUrl('https://res.cloudinary.com/dcoza82oi/video/upload/v1772301163/featured-kaduna-chapter_nrjyh0.mp4'),
+    src: resolveAssetUrl('https://res.cloudinary.com/dcoza82oi/video/upload/v1772301163/featured-kaduna-chapter_nrjyh0.mp4'),
   },
   {
     id: 'free',
     tag: 'Car Sessions ',
     title: 'BMW',
-    poster: resolveAssetUrl('/media/free.mp4'),
-    src: resolveAssetUrl('/media/free.mp4'),
+    poster: resolveAssetUrl('https://res.cloudinary.com/dcoza82oi/video/upload/v1772301173/free_fhxjyw.mp4'),
+    src: resolveAssetUrl('https://res.cloudinary.com/dcoza82oi/video/upload/v1772301173/free_fhxjyw.mp4'),
   },
 
   {
     id: 'rayjan',
     tag: 'Fashion House',
     title: 'Rayjaj',
-    poster: resolveAssetUrl('/media/featured-void-reel.mp4'),
-    src: resolveAssetUrl('/media/rayjay-void.mp4'),
+    poster: resolveAssetUrl('https://res.cloudinary.com/dcoza82oi/video/upload/v1772301143/featured-void-reel_j5ef0q.mp4'),
+    src: resolveAssetUrl('https://res.cloudinary.com/dcoza82oi/video/upload/v1772301183/rayjay-void_rpi3jy.mp4'),
   },
   {
     id: 'picnic-hangout',
     tag: 'Lifestyle',
     title: 'Picnic Hangout',
-    poster: resolveAssetUrl('/media/social-media-mockup.mp4'),
-    src: resolveAssetUrl('/media/video-4.mp4'),
+    poster: resolveAssetUrl('https://res.cloudinary.com/dcoza82oi/video/upload/v1772301134/social-media-mockup_gg3ily.mp4'),
+    src: resolveAssetUrl('https://res.cloudinary.com/dcoza82oi/video/upload/v1772301165/video-4_ktrrw8.mp4'),
   },
   {
     id: 'video-three',
     tag: 'Food Porn',
     title: 'Pastries',
-    poster: resolveAssetUrl('/media/featured-kaduna-chapter.mp4'),
-    src: resolveAssetUrl('/media/video-3.mp4'),
+    poster: resolveAssetUrl('https://res.cloudinary.com/dcoza82oi/video/upload/v1772301163/featured-kaduna-chapter_nrjyh0.mp4'),
+    src: resolveAssetUrl('https://res.cloudinary.com/dcoza82oi/video/upload/v1772301161/video-3_xgfyzy.mp4'),
   },
 
   {
     id: 'food-porn',
     tag: 'Food Porn',
     title: 'Grills & Vibes',
-    poster: resolveAssetUrl('/media/featured-lemonade.mp4'),
-    src: resolveAssetUrl('/media/video-2.mp4'),
+    poster: resolveAssetUrl('https://res.cloudinary.com/dcoza82oi/video/upload/v1772301159/featured-lemonade_ond3sq.mp4'),
+    src: resolveAssetUrl('https://res.cloudinary.com/dcoza82oi/video/upload/v1772301140/video-2_x44fly.mp4'),
   },
   {
       "id": "jaguar",
       "tag": "Car Sessions",
       "title": "JAGUAR",
-      "poster": resolveAssetUrl('/media/featured-lemonade.mp4'),
-      "src": resolveAssetUrl('/media/video-5.mp4')
+      "poster": resolveAssetUrl('https://res.cloudinary.com/dcoza82oi/video/upload/v1772301159/featured-lemonade_ond3sq.mp4'),
+      "src": resolveAssetUrl('https://res.cloudinary.com/dcoza82oi/video/upload/v1772301141/video-5_cyryom.mp4')
     },
      {
       "id": "skating-skating",
       "tag": "Lifestyle",
       "title": "Skating, Skating",
-      "poster": resolveAssetUrl('/media/featured-lemonade.mp4'),
-      "src": resolveAssetUrl('/media/video-6.mp4')
+      "poster": resolveAssetUrl('https://res.cloudinary.com/dcoza82oi/video/upload/v1772301159/featured-lemonade_ond3sq.mp4'),
+      "src": resolveAssetUrl('https://res.cloudinary.com/dcoza82oi/video/upload/v1772301154/video-6_yf1rrz.mp4')
     }
 ]
 

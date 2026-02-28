@@ -257,7 +257,7 @@ const ServicesShowcase = () => {
           <div className="social-phone">
             <video
               className="social-phone-video"
-              src={resolveAssetUrl('/media/social-media-mockup.mp4')}
+              src={resolveAssetUrl('https://res.cloudinary.com/dcoza82oi/video/upload/v1772301134/social-media-mockup_gg3ily.mp4')}
               autoPlay
               loop
               muted
