@@ -11,6 +11,7 @@ const CONTENT_CREATION_IMAGE_BY_NAME = {
 
 const DESIGN_BRANDING_IMAGE_BY_NAME = {
   one: 'https://res.cloudinary.com/dcoza82oi/image/upload/v1772290747/design-branding-one_i1rfag.jpg',
+  two:'https://res.cloudinary.com/dcoza82oi/image/upload/v1772290752/design-branding-six_duqpbd.jpg',
   three: 'https://res.cloudinary.com/dcoza82oi/image/upload/v1772290757/design-branding-three_avl31x.jpg',
   four: 'https://res.cloudinary.com/dcoza82oi/image/upload/v1772290784/design-branding-four_tfclnq.jpg',
   five: 'https://res.cloudinary.com/dcoza82oi/image/upload/v1772290780/design-branding-five_o9mvnr.jpg',

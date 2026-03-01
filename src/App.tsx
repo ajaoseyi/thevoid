@@ -23,15 +23,11 @@ const INTRO_WORD_STEP_MS = 1600
 const INTRO_WORD_ANIMATION_MS = 1450
 const INTRO_OUTRO_MS = 850
 const SCROLL_DURATION_MS = 820
-const BOOT_PRELOAD_TIMEOUT_MS = 2600
+const BOOT_PRELOAD_MAX_WAIT_MS = 14_000
 
 const introPreloadImages = [
-  getContentCreationImageByNumber(1),
-  getContentCreationImageByNumber(3),
-  getContentCreationImageByNumber(4),
-  getDesignBrandingImageByNumber(1),
-  getDesignBrandingImageByNumber(2),
-  getDesignBrandingImageByNumber(3),
+  ...Array.from({ length: 8 }, (_, index) => getContentCreationImageByNumber(index + 1)),
+  ...Array.from({ length: 13 }, (_, index) => getDesignBrandingImageByNumber(index + 1)),
 ]
 
 const introPreloadVideos = [
@@ -187,8 +183,12 @@ function App() {
   const [isIntroVisible, setIsIntroVisible] = useState(true)
   const [isIntroLeaving, setIsIntroLeaving] = useState(false)
   const [isIntroSequenceComplete, setIsIntroSequenceComplete] = useState(false)
+  const [isBootPreloadComplete, setIsBootPreloadComplete] = useState(false)
+  const [bootPreloadProgress, setBootPreloadProgress] = useState(0)
   const path = normalizePath(location.pathname)
   const seoConfig = useMemo(() => getSeoConfigForPath(path), [path])
+  const shouldShowIntroProgress = isIntroSequenceComplete && !isBootPreloadComplete
+  const bootProgressPercent = Math.round(bootPreloadProgress * 100)
 
   usePageSeo(seoConfig)
 
@@ -197,44 +197,81 @@ function App() {
     const totalDuration = reducedMotion
       ? 1200
       : (introWords.length - 1) * INTRO_WORD_STEP_MS + INTRO_WORD_ANIMATION_MS + INTRO_OUTRO_MS
-    const leaveAt = Math.max(0, totalDuration - INTRO_OUTRO_MS)
-
-    const leaveTimer = window.setTimeout(() => {
-      setIsIntroLeaving(true)
-    }, leaveAt)
 
     const introDoneTimer = window.setTimeout(() => {
       setIsIntroSequenceComplete(true)
     }, totalDuration)
 
     return () => {
-      window.clearTimeout(leaveTimer)
       window.clearTimeout(introDoneTimer)
     }
   }, [])
 
   useEffect(() => {
+    let isActive = true
+    let hasSettled = false
+
+    const completePreload = () => {
+      if (!isActive || hasSettled) return
+      hasSettled = true
+      window.clearTimeout(timeoutId)
+      setBootPreloadProgress(1)
+      setIsBootPreloadComplete(true)
+    }
+
+    const timeoutId = window.setTimeout(() => {
+      completePreload()
+    }, BOOT_PRELOAD_MAX_WAIT_MS)
+
     const preloadBootAssets = async () => {
+      const imageSources = Array.from(new Set(introPreloadImages.map((src) => resolveAssetUrl(src))))
+      const videoSources = Array.from(new Set(introPreloadVideos.map((src) => resolveAssetUrl(src))))
+
       const preloadTasks: Promise<unknown>[] = [
-        fetch('/data/featured-videos.json').catch(() => undefined),
-        ...introPreloadImages.map((src) => preloadImage(resolveAssetUrl(src))),
-        ...introPreloadVideos.map((src) => preloadVideoFrame(resolveAssetUrl(src))),
+        fetch('/data/featured-videos.json', { cache: 'force-cache' }).catch(() => undefined),
+        ...imageSources.map((src) => preloadImage(src)),
+        ...videoSources.map((src) => preloadVideoFrame(src)),
       ]
+      const totalTaskCount = preloadTasks.length
 
-      const timeoutTask = new Promise<void>((resolve) => {
-        window.setTimeout(resolve, BOOT_PRELOAD_TIMEOUT_MS)
-      })
+      if (totalTaskCount === 0) {
+        completePreload()
+        return
+      }
 
-      await Promise.race([Promise.allSettled(preloadTasks), timeoutTask])
+      let completedTaskCount = 0
+      const trackedTasks = preloadTasks.map((task) =>
+        task.finally(() => {
+          completedTaskCount += 1
+          if (!isActive || hasSettled) return
+          const nextProgress = completedTaskCount / totalTaskCount
+          setBootPreloadProgress((current) => Math.max(current, nextProgress))
+        }),
+      )
+
+      await Promise.allSettled(trackedTasks)
+      completePreload()
     }
 
     void preloadBootAssets()
+
+    return () => {
+      isActive = false
+      window.clearTimeout(timeoutId)
+    }
   }, [])
 
   useEffect(() => {
-    if (!isIntroSequenceComplete) return
-    setIsIntroVisible(false)
-  }, [isIntroSequenceComplete])
+    if (!isIntroSequenceComplete || !isBootPreloadComplete) return
+    setIsIntroLeaving(true)
+    const hideIntroTimer = window.setTimeout(() => {
+      setIsIntroVisible(false)
+    }, INTRO_OUTRO_MS)
+
+    return () => {
+      window.clearTimeout(hideIntroTimer)
+    }
+  }, [isBootPreloadComplete, isIntroSequenceComplete])
 
   useEffect(() => {
     const cursor = document.querySelector('.custom-cursor') as HTMLDivElement | null
@@ -314,6 +351,20 @@ function App() {
               </span>
             ))}
           </div>
+          {shouldShowIntroProgress ? (
+            <div className="intro-progress-slider">
+              <div className="intro-progress-meta">
+                <span>Loading experience</span>
+                <span>{bootProgressPercent}%</span>
+              </div>
+              <div className="intro-progress-track" role="presentation">
+                <span
+                  className="intro-progress-fill"
+                  style={{ '--intro-progress': `${bootProgressPercent}%` } as CSSProperties}
+                />
+              </div>
+            </div>
+          ) : null}
         </div>
       ) : null}
       <div className="custom-cursor" data-mode="default" data-action="" aria-hidden="true" />

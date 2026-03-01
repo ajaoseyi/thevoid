@@ -3,13 +3,16 @@ const Hero = () => {
     <section className="hero">
       <div className="hero-grid">
         <div className="hero-copy">
-          <p className="eyebrow">Digital media in every language.</p>
-          <h1>The studio reimagining your brand</h1>
+          <p className="eyebrow">Creative Marketing Agency</p>
+          <h1>YOUR BRAND DONE RIGHT.</h1>
           <p className="lead">
-            Creators. Technologists. Amplifiers. We are The Void, transforming stories into
-            sound with a modern, scalable approach to video.
+            From brand identity and content design to high-quality video and modern websites, we create the tools your business needs to grow.
           </p>
-         
+          <a className="" href='https://wa.me/2348119113099' target="_blank" rel="noopener noreferrer"  >
+         <button className="cta mt-8 scale-103" type="button">
+          Get in touch
+        </button>
+        </a>
         </div>
         {/* <div className="hero-media">
           <div className="media-card large">

@@ -1,11 +1,11 @@
 import { Link } from 'react-router-dom'
-
+import WhiteLogo from  '../../assets/icons/logo-white.png'
 const Header = () => {
   return (
     <header className="site-header">
       <nav className="nav">
         <Link className="brand" to="/">
-          <span className="brand-mark" />
+          <img className='h-[40px]' src={WhiteLogo}/>
           <span className="brand-name">The Void</span>
         </Link>
         <div className="nav-links">
@@ -14,9 +14,11 @@ const Header = () => {
           <Link to="/about">About</Link>
           <Link to="/#contact">Contact</Link>
         </div>
-        {/* <button className="cta" type="button">
+        <a href='https://wa.me/2348119113099' target="_blank" rel="noopener noreferrer"  >
+         <button className="cta scale-103" type="button">
           Get in touch
-        </button> */}
+        </button>
+        </a>
       </nav>
     </header>
   )

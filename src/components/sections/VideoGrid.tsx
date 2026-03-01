@@ -166,6 +166,14 @@ const VideoGrid = () => {
     setActiveIndex(normalizedIndex)
   }
 
+  const revealVideoMedia = (media: HTMLVideoElement) => {
+    media.dataset.ready = 'true'
+    const skeleton = media.previousElementSibling
+    if (skeleton instanceof HTMLElement && skeleton.classList.contains('video-skeleton')) {
+      skeleton.dataset.ready = 'true'
+    }
+  }
+
   useEffect(() => {
     const cursor = document.querySelector('.custom-cursor') as HTMLDivElement | null
     if (!cursor) return
@@ -600,6 +608,13 @@ const VideoGrid = () => {
                 onTouchEnd={handleTouchEnd}
                 aria-current={activeIndex === logicalIndex ? 'true' : undefined}
               >
+                <div className="video-skeleton" aria-hidden="true">
+                  <span className="video-skeleton-shimmer" />
+                  <div className="video-skeleton-lines">
+                    <span />
+                    <span />
+                  </div>
+                </div>
                 <video
                   ref={(node) => {
                     videoRefs.current[renderIndex] = node
@@ -614,12 +629,19 @@ const VideoGrid = () => {
                   onTouchEnd={handleTouchEnd}
                   onLoadedData={(event) => {
                     const media = event.currentTarget
+                    revealVideoMedia(media)
                     if (!media.paused || media.currentTime >= PREVIEW_SEEK_SECONDS) return
                     try {
                       media.currentTime = PREVIEW_SEEK_SECONDS
                     } catch {
                       // Ignore seek failures while data is still buffering.
                     }
+                  }}
+                  onCanPlay={(event) => {
+                    revealVideoMedia(event.currentTarget)
+                  }}
+                  onError={(event) => {
+                    revealVideoMedia(event.currentTarget)
                   }}
                   onPlay={() => {
                     if (playModeRef.current.mode === 'click') {

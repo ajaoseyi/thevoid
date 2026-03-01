@@ -370,14 +370,12 @@ const ServicesShowcase = () => {
           Ready to <em>step into the void?</em>
         </h3>
         <p>Let&apos;s build something that feels sharp, modern, and impossible to ignore.</p>
-        <div className="services-final-actions">
+          <a>
           <button className="cta" type="button">
             Start a project
           </button>
-          <button className="cta ghost" type="button">
-            Download deck
-          </button>
-        </div>
+       </a>
+      
       </div>
 
       {isContentGalleryOpen ? (

@@ -1,7 +1,7 @@
-@import url('https://fonts.googleapis.com/css2?family=Barlow+Condensed:wght@400;500;600;700&family=Bebas+Neue&family=Fraunces:wght@300;400;600;700&family=Newsreader:wght@300;400;500;600&family=Space+Grotesk:wght@400;500;600;700&display=swap');
+@font-face{font-family:'Clash Grotesk';src:url('./assets/fonts/ClashGrotesk-Variable.ttf') format('truetype');font-weight:200 700;font-style:normal;font-display:swap;}
 
 :root {
-  font-family: 'Space Grotesk', system-ui, sans-serif;
+  font-family: 'Clash Grotesk', system-ui, sans-serif;
   line-height: 1.6;
   font-weight: 400;
   color: #f4f4f4;
@@ -19,11 +19,11 @@
   --text-tertiary: #c9c9c9;
   --border: rgba(255, 255, 255, 0.12);
   --accent: #ffffff;
-  --font-display: 'Bebas Neue', 'Barlow Condensed', 'Arial Narrow', sans-serif;
-  --font-body: 'Space Grotesk', system-ui, sans-serif;
-  --font-condensed: 'Barlow Condensed', 'Arial Narrow', sans-serif;
-  --font-story-display: 'Fraunces', 'Times New Roman', serif;
-  --font-story-body: 'Newsreader', 'Georgia', serif;
+  --font-display: 'Clash Grotesk', system-ui, sans-serif;
+  --font-body: 'Clash Grotesk', system-ui, sans-serif;
+  --font-condensed: 'Clash Grotesk', system-ui, sans-serif;
+  --font-story-display: 'Clash Grotesk', system-ui, sans-serif;
+  --font-story-body: 'Clash Grotesk', system-ui, sans-serif;
   --void-progress: 0;
   --scrollbar-track: #080808;
   --scrollbar-thumb: linear-gradient(180deg, #f2f2f2 0%, #b8b8b8 55%, #8d8d8d 100%);
@@ -113,8 +113,8 @@ h2,
 h3 {
   font-family: var(--font-display);
   font-weight: 400;
-  line-height: 0.94;
-  letter-spacing: 0.03em;
+  line-height: 0.98;
+  letter-spacing: 0.012em;
   text-wrap: balance;
 }
 
@@ -135,3 +135,10 @@ p {
     transition-duration: 0.001ms !important;
   }
 }
+
+
+
+
+
+h1, h2, h3 { font-weight: 600; }
+
