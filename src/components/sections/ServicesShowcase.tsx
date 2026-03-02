@@ -45,6 +45,21 @@ const designBrandingImageNames = [
   'thirteen',
 ]
 
+const storefrontSlides = [
+  {
+    name: 'Woven Few',
+    url: 'https://www.wovenfew.com/',
+    desktopImage: 'images/storefront/wovenfew-desktop.png',
+    mobileImage: 'images/storefront/wovenfew-mobile.png',
+  },
+  {
+    name: 'Sound Turf',
+    url: 'https://sound-turf.com/',
+    desktopImage: 'images/storefront/sound-turf-desktop.png',
+    mobileImage: 'images/storefront/sound-turf-mobile.png',
+  },
+]
+
 
 type LightboxImage = { src: string; fallbackSrc: string; alt: string }
 
@@ -68,6 +83,7 @@ const CdnImage = ({
   const [currentSrc, setCurrentSrc] = useState(src)
   const [isLoaded, setIsLoaded] = useState(false)
   const [fallbackApplied, setFallbackApplied] = useState(false)
+
 
   useEffect(() => {
     setCurrentSrc(src)
@@ -105,6 +121,8 @@ const CdnImage = ({
 const ServicesShowcase = () => {
   const [isContentGalleryOpen, setIsContentGalleryOpen] = useState(false)
   const [isBrandingGalleryOpen, setIsBrandingGalleryOpen] = useState(false)
+    const [storefrontIndex, setStorefrontIndex] = useState(0)
+
   const [activeImageState, setActiveImageState] = useState<{
     images: LightboxImage[]
     currentIndex: number
@@ -146,6 +164,18 @@ const ServicesShowcase = () => {
     const delta = direction === 'next' ? 1 : -1
     openLightboxAtIndex(activeImageState.images, activeImageState.currentIndex + delta)
   }
+
+    useEffect(() => {
+  if (storefrontSlides.length < 2) {
+    return
+  }
+
+  const interval = window.setInterval(() => {
+    setStorefrontIndex((prevIndex) => (prevIndex + 1) % storefrontSlides.length)
+  }, 7000)
+
+  return () => window.clearInterval(interval)
+}, [])
 
   useEffect(() => {
     if (!activeImage && !isBrandingGalleryOpen && !isContentGalleryOpen) {
@@ -348,21 +378,76 @@ const ServicesShowcase = () => {
         </div>
       </article>
 
-      <article className="expertise-block web-block">
-        <div className="web-head">
-          <span>05 / Services</span>
-          <h3>Website Creation</h3>
-        </div>
-        <div className="web-stage">
-          <div className="web-stage-screen">
-            <strong>Custom digital storefront</strong>
-            <small>Fast loading. Responsive. Brand-aligned.</small>
-          </div>
-          <div className="web-stage-phone" aria-hidden="true">
-            <span />
-          </div>
-        </div>
-      </article>
+     <article className="expertise-block web-block">
+  <div className="web-head">
+    <span>05 / Services</span>
+    <h3>Website Creation</h3>
+  </div>
+  <div className="web-stage">
+    <div className="web-stage-screen">
+      <div
+        className="web-stage-carousel"
+        style={{ '--slide-index': storefrontIndex } as React.CSSProperties}
+      >
+        {storefrontSlides.map((slide) => (
+          <a
+            className="web-stage-slide"
+            href={slide.url}
+            key={slide.name}
+            rel="noreferrer"
+            target="_blank"
+          >
+            <img
+              alt={slide.name + ' storefront desktop preview'}
+              src={resolveAssetUrl(slide.desktopImage)}
+              loading="lazy"
+            />
+            <span className="web-stage-label">
+              {slide.name}
+              <em>Visit site</em>
+            </span>
+          </a>
+        ))}
+      </div>
+      <div className="web-stage-controls" role="tablist" aria-label="Storefront examples">
+        {storefrontSlides.map((slide, index) => (
+          <button
+            aria-label={'Show ' + slide.name + ' storefront'}
+            aria-pressed={index === storefrontIndex}
+            className={index === storefrontIndex ? 'is-active' : undefined}
+            key={slide.name + '-control'}
+            onClick={() => setStorefrontIndex(index)}
+            type="button"
+          />
+        ))}
+      </div>
+    </div>
+    <div className="web-stage-phone" aria-hidden="true">
+      <div
+        className="web-stage-carousel"
+        style={{ '--slide-index': storefrontIndex } as React.CSSProperties}
+      >
+        {storefrontSlides.map((slide) => (
+          <a
+            className="web-stage-slide"
+            href={slide.url}
+            key={slide.name + '-mobile'}
+            rel="noreferrer"
+            target="_blank"
+          >
+            <img
+              alt={slide.name + ' storefront mobile preview'}
+              src={resolveAssetUrl(slide.mobileImage)}
+              loading="lazy"
+            />
+          </a>
+        ))}
+      </div>
+      <span className="web-stage-notch" />
+    </div>
+  </div>
+</article>
+
 
  
       <div className="services-final-cta">

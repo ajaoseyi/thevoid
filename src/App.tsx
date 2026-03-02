@@ -24,13 +24,15 @@ const INTRO_WORD_ANIMATION_MS = 1450
 const INTRO_OUTRO_MS = 850
 const SCROLL_DURATION_MS = 820
 const BOOT_PRELOAD_MAX_WAIT_MS = 14_000
+const INTRO_PREVIEW_IMAGE_COUNT = 4
+const PRIORITY_FEATURED_VIDEO_COUNT = 4
 
 const introPreloadImages = [
   ...Array.from({ length: 8 }, (_, index) => getContentCreationImageByNumber(index + 1)),
   ...Array.from({ length: 13 }, (_, index) => getDesignBrandingImageByNumber(index + 1)),
 ]
 
-const introPreloadVideos = [
+const fallbackFeaturedVideos = [
   'https://res.cloudinary.com/dcoza82oi/video/upload/v1772301159/featured-lemonade_ond3sq.mp4',
   'https://res.cloudinary.com/dcoza82oi/video/upload/v1772301163/featured-kaduna-chapter_nrjyh0.mp4',
   'https://res.cloudinary.com/dcoza82oi/video/upload/v1772301173/free_fhxjyw.mp4',
@@ -225,17 +227,28 @@ function App() {
 
     const preloadBootAssets = async () => {
       const imageSources = Array.from(new Set(introPreloadImages.map((src) => resolveAssetUrl(src))))
-      const videoSources = Array.from(new Set(introPreloadVideos.map((src) => resolveAssetUrl(src))))
+      const previewImageSources = imageSources.slice(0, INTRO_PREVIEW_IMAGE_COUNT)
+      const backgroundImageSources = imageSources.slice(INTRO_PREVIEW_IMAGE_COUNT)
+
+      const videoSources = Array.from(new Set(fallbackFeaturedVideos.map((src) => resolveAssetUrl(src))))
+      const priorityVideoSources = videoSources.slice(0, PRIORITY_FEATURED_VIDEO_COUNT)
+      const backgroundVideoSources = videoSources.slice(PRIORITY_FEATURED_VIDEO_COUNT)
 
       const preloadTasks: Promise<unknown>[] = [
-        fetch('/data/featured-videos.json', { cache: 'force-cache' }).catch(() => undefined),
-        ...imageSources.map((src) => preloadImage(src)),
-        ...videoSources.map((src) => preloadVideoFrame(src)),
+        ...previewImageSources.map((src) => preloadImage(src)),
+        ...priorityVideoSources.map((src) => preloadVideoFrame(src)),
       ]
       const totalTaskCount = preloadTasks.length
 
       if (totalTaskCount === 0) {
         completePreload()
+        window.setTimeout(() => {
+          void Promise.allSettled([
+            fetch('/data/featured-videos.json', { cache: 'force-cache' }).catch(() => undefined),
+            ...backgroundImageSources.map((src) => preloadImage(src)),
+            ...backgroundVideoSources.map((src) => preloadVideoFrame(src)),
+          ])
+        }, 0)
         return
       }
 
@@ -251,6 +264,13 @@ function App() {
 
       await Promise.allSettled(trackedTasks)
       completePreload()
+      window.setTimeout(() => {
+        void Promise.allSettled([
+          fetch('/data/featured-videos.json', { cache: 'force-cache' }).catch(() => undefined),
+          ...backgroundImageSources.map((src) => preloadImage(src)),
+          ...backgroundVideoSources.map((src) => preloadVideoFrame(src)),
+        ])
+      }, 0)
     }
 
     void preloadBootAssets()
@@ -383,3 +403,4 @@ function App() {
 }
 
 export default App
+
